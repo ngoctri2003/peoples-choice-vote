@@ -16,7 +16,10 @@ create table if not exists voting_sessions (
   id uuid primary key default gen_random_uuid(),
   started_at timestamptz not null default now(),
   ends_at timestamptz not null,
-  status text not null default 'open' check (status in ('open', 'closed'))
+  status text not null default 'open' check (status in ('open', 'closed')),
+  -- Team names stay hidden on /display (shown as "Đội N") until the MC
+  -- explicitly reveals them, for a game-show-style results moment.
+  revealed boolean not null default false
 );
 
 create table if not exists votes (

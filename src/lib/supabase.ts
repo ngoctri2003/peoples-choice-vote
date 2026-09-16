@@ -21,6 +21,7 @@ export type VotingSession = {
   started_at: string
   ends_at: string
   status: 'open' | 'closed'
+  revealed: boolean
 }
 
 export type VoteCount = {

@@ -64,6 +64,8 @@ export default function DisplayPage() {
     }
   }, [session, loadCounts])
 
+  const revealed = session?.revealed ?? false
+
   const totalVotes = counts.reduce((sum, c) => sum + c.votes, 0)
   const maxVotes = Math.max(1, ...counts.map((c) => c.votes))
   const winner =
@@ -187,6 +189,8 @@ export default function DisplayPage() {
               const { rotation, delay } = seededWobble(c.team_id)
               const dimmed = phase === 'closed' && !isWinner && totalVotes > 0
 
+              const displayName = revealed ? c.name : `Đội ${c.sort_order}`
+
               return (
                 <div
                   key={c.team_id}
@@ -200,6 +204,7 @@ export default function DisplayPage() {
                   }}
                 >
                   <div
+                    key={revealed ? 'revealed' : 'hidden'}
                     style={
                       {
                         '--rot': `${rotation}deg`,
@@ -219,7 +224,7 @@ export default function DisplayPage() {
                     }
                   >
                     {isWinner ? '👑 ' : ''}
-                    {c.name}
+                    {displayName}
                   </div>
                   <div style={{ fontSize: 16, opacity: 0.7, fontVariantNumeric: 'tabular-nums' }}>
                     {c.votes} vote{c.votes === 1 ? '' : 's'}

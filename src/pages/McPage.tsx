@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { supabase, type Team } from '../lib/supabase'
 import { useActiveSession, sessionPhase } from '../lib/useActiveSession'
 import { useCountdown } from '../lib/useCountdown'
 import Blobs, { GRADIENT_TEXT } from '../components/Blobs'
@@ -12,26 +13,55 @@ export default function McPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [teams, setTeams] = useState<Team[]>([])
+  const [names, setNames] = useState<Record<string, string>>({})
+  const [teamsSaved, setTeamsSaved] = useState(false)
+
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
+  const revealed = session?.revealed ?? false
 
-  async function call(path: string) {
+  useEffect(() => {
+    supabase
+      .from('teams')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        const list = (data as Team[]) ?? []
+        setTeams(list)
+        setNames(Object.fromEntries(list.map((t) => [t.id, t.name])))
+      })
+  }, [])
+
+  async function call(path: string, extraBody?: Record<string, unknown>) {
     setBusy(true)
     setError(null)
     try {
       const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key }),
+        body: JSON.stringify({ key, ...extraBody }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
+      return true
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Có lỗi xảy ra')
+      return false
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function saveTeamNames() {
+    const payload = teams.map((t) => ({ id: t.id, name: names[t.id] ?? t.name }))
+    const ok = await call('/api/update-teams', { teams: payload })
+    if (ok) {
+      setTeams((prev) => prev.map((t) => ({ ...t, name: payload.find((p) => p.id === t.id)?.name ?? t.name })))
+      setTeamsSaved(true)
+      setTimeout(() => setTeamsSaved(false), 2000)
     }
   }
 
@@ -45,7 +75,7 @@ export default function McPage() {
           position: 'relative',
           zIndex: 1,
           width: '100%',
-          maxWidth: 420,
+          maxWidth: 460,
           padding: 28,
           borderRadius: 28,
           background: 'rgba(255,255,255,0.05)',
@@ -75,7 +105,7 @@ export default function McPage() {
           <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
             {phase === 'idle' && 'Chưa bắt đầu'}
             {phase === 'open' && `Đang mở — còn ${label}`}
-            {phase === 'closed' && 'Đã đóng'}
+            {phase === 'closed' && (revealed ? 'Đã đóng — đã hiển thị kết quả' : 'Đã đóng — chưa hiển thị tên đội')}
           </span>
         </div>
 
@@ -85,7 +115,7 @@ export default function McPage() {
           </p>
         )}
 
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
           <button
             disabled={busy || phase === 'open'}
             onClick={() => call('/api/start-session')}
@@ -102,7 +132,54 @@ export default function McPage() {
           </button>
         </div>
 
-        {error && <p style={{ color: '#ff8a8a', marginTop: 16, fontSize: 14 }}>{error}</p>}
+        <button
+          disabled={busy || phase !== 'closed' || revealed}
+          onClick={() => call('/api/reveal-results')}
+          style={{
+            ...btnStyle('linear-gradient(135deg, #ffd166, #ff5da2)', busy || phase !== 'closed' || revealed),
+            width: '100%',
+            marginBottom: 20,
+          }}
+        >
+          🏆 {revealed ? 'Đã hiển thị tên đội' : 'Hiển thị kết quả (lộ tên đội)'}
+        </button>
+
+        {error && <p style={{ color: '#ff8a8a', marginBottom: 16, fontSize: 14 }}>{error}</p>}
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 18 }}>
+          <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>
+            Tên 5 đội (ẩn khỏi màn hình chính đến khi hiển thị kết quả)
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {teams.map((t, i) => (
+              <input
+                key={t.id}
+                value={names[t.id] ?? ''}
+                onChange={(e) => setNames((prev) => ({ ...prev, [t.id]: e.target.value }))}
+                placeholder={`Đội ${t.sort_order || i + 1}`}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#fff',
+                  fontSize: 14,
+                }}
+              />
+            ))}
+          </div>
+          <button
+            disabled={busy || teams.length === 0}
+            onClick={saveTeamNames}
+            style={{
+              ...btnStyle('linear-gradient(135deg, #5ad1ff, #c792ff)', busy || teams.length === 0),
+              width: '100%',
+              marginTop: 12,
+            }}
+          >
+            {teamsSaved ? '✓ Đã lưu' : 'Lưu tên đội'}
+          </button>
+        </div>
       </div>
     </div>
   )
