@@ -163,15 +163,10 @@ export default function DisplayPage() {
         // fully hide the banner's own baked-in title text (which would
         // otherwise fight with our live word-cloud text for attention), but
         // lighter toward the edges so the robot/crowd artwork still shows.
-        // The image itself uses `contain` (not `cover`) so it's never
-        // cropped — a screen with a different aspect ratio than the source
-        // banner would otherwise cut off the logo or the robot at the edges.
-        backgroundColor: '#05050f',
         background:
           'radial-gradient(ellipse at center, rgba(5,10,26,0.99) 0%, rgba(5,10,26,0.97) 35%, rgba(5,10,26,0.7) 72%, rgba(5,10,26,0.42) 100%), url(/pca-banner.jpg)',
-        backgroundSize: 'cover, contain',
+        backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
       }}
     >
       {winnerIds.size > 0 && (
