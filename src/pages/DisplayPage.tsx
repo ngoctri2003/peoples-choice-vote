@@ -189,44 +189,57 @@ export default function DisplayPage() {
         </div>
 
         {phase === 'idle' && (
-          <Centered>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', marginTop: '2vh' }}>
             <div
               style={{
+                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '6vw',
-                flexWrap: 'wrap',
+                padding: '1vh 2vw',
               }}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                <QrCode value={voteUrl} size={260} />
-                <div style={{ fontSize: 18, opacity: 0.75 }}>Quét mã để bình chọn</div>
-              </div>
+              <QrCode value={voteUrl} size="min(90vh, 46vw)" />
+            </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                <div
-                  style={{
-                    width: 180,
-                    height: 180,
-                    borderRadius: '50%',
-                    border: `3px solid ${GOLD}`,
-                    boxShadow: `0 0 40px ${GOLD}55`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(255,209,102,0.06)',
-                    animation: 'ring-pulse 2.2s ease-out infinite',
-                  }}
-                >
-                  <div style={{ fontSize: 56, fontWeight: 900, color: GOLD, lineHeight: 1 }}>{onlineCount}</div>
-                  <div style={{ fontSize: 15, opacity: 0.8, marginTop: 6 }}>người đang chờ</div>
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '3vh',
+                padding: '2vh 2vw',
+              }}
+            >
+              <div
+                style={{
+                  width: 'min(78vh, 46vw)',
+                  aspectRatio: '1 / 1',
+                  borderRadius: '50%',
+                  border: `3px solid ${GOLD}`,
+                  boxShadow: `0 0 60px ${GOLD}55`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255,209,102,0.06)',
+                  animation: 'ring-pulse 2.2s ease-out infinite',
+                }}
+              >
+                <div style={{ fontSize: 'min(18vh, 12vw)', fontWeight: 900, color: GOLD, lineHeight: 1 }}>
+                  {onlineCount}
                 </div>
-                <div style={{ fontSize: 18, opacity: 0.75 }}>Đang chờ MC bắt đầu bình chọn…</div>
+                <div style={{ fontSize: 'clamp(16px, 2vw, 26px)', opacity: 0.8, marginTop: '1.5vh' }}>
+                  người đang chờ
+                </div>
+              </div>
+              <div style={{ fontSize: 'clamp(18px, 2.4vw, 32px)', opacity: 0.8, fontWeight: 700, textAlign: 'center' }}>
+                Đang chờ MC bắt đầu bình chọn…
               </div>
             </div>
-          </Centered>
+          </div>
         )}
 
         {phase !== 'idle' && (
@@ -301,14 +314,6 @@ export default function DisplayPage() {
           {totalVotes} lượt bình chọn đã ghi nhận
         </div>
       </div>
-    </div>
-  )
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {children}
     </div>
   )
 }
