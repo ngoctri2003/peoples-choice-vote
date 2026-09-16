@@ -5,7 +5,14 @@ import { useCountdown } from '../lib/useCountdown'
 import { useOnlineCount } from '../lib/presence'
 import { GRADIENT_TEXT } from '../components/Blobs'
 import QrCode from '../components/QrCode'
-import { TEXT, TEXT_MUTED, PAGE_BG, TEAM_COLORS, GOLD } from '../lib/theme'
+
+// This screen sits on top of the event's own "People's Choice Award" banner
+// artwork (dark navy), so it uses its own light-on-dark palette instead of
+// the rest of the app's light theme, which would wash out against it.
+const TEXT = '#ffffff'
+const TEXT_MUTED = 'rgba(255,255,255,0.78)'
+const TEAM_COLORS = ['#ff5da2', '#5ad1ff', '#ffd166', '#7bf1a8', '#c792ff']
+const GOLD = '#ffd166'
 
 // Sizes are viewport-height-relative (not px) so the cloud always fits the
 // screen without scrolling, no matter how lopsided the vote counts get —
@@ -152,9 +159,19 @@ export default function DisplayPage() {
         position: 'relative',
         color: TEXT,
         fontFamily: 'inherit',
-        background: PAGE_BG,
-        backgroundSize: '160% 160%, 160% 160%, 100% 100%',
-        animation: 'bg-drift 18s ease-in-out infinite',
+        // A vignette rather than a flat overlay: dark enough in the middle to
+        // fully hide the banner's own baked-in title text (which would
+        // otherwise fight with our live word-cloud text for attention), but
+        // lighter toward the edges so the robot/crowd artwork still shows.
+        // The image itself uses `contain` (not `cover`) so it's never
+        // cropped — a screen with a different aspect ratio than the source
+        // banner would otherwise cut off the logo or the robot at the edges.
+        backgroundColor: '#05050f',
+        background:
+          'radial-gradient(ellipse at center, rgba(5,10,26,0.99) 0%, rgba(5,10,26,0.97) 35%, rgba(5,10,26,0.7) 72%, rgba(5,10,26,0.42) 100%), url(/pca-banner.jpg)',
+        backgroundSize: 'cover, contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       {winnerIds.size > 0 && (
@@ -202,12 +219,12 @@ export default function DisplayPage() {
               padding: '10px 26px',
               borderRadius: 999,
               background: paused
-                ? 'rgba(100,116,139,0.12)'
+                ? 'rgba(148,163,184,0.18)'
                 : phase === 'open'
-                  ? 'rgba(28,19,48,0.06)'
-                  : 'rgba(199,134,10,0.12)',
-              border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(28,19,48,0.16)' : GOLD}`,
-              color: paused ? '#64748b' : phase === 'closed' ? GOLD : TEXT,
+                  ? 'rgba(255,255,255,0.14)'
+                  : 'rgba(255,209,102,0.15)',
+              border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(255,255,255,0.3)' : GOLD}`,
+              color: paused ? '#cbd5e1' : phase === 'closed' ? GOLD : TEXT,
               whiteSpace: 'nowrap',
               flexShrink: 0,
               animation:
