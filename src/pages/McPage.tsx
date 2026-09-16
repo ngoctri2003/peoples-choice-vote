@@ -138,10 +138,22 @@ export default function McPage() {
           style={{
             ...btnStyle('linear-gradient(135deg, #ffd166, #ff5da2)', busy || phase !== 'closed' || revealed),
             width: '100%',
-            marginBottom: 20,
+            marginBottom: 12,
           }}
         >
           🏆 {revealed ? 'Đã hiển thị tên đội' : 'Hiển thị kết quả (lộ tên đội)'}
+        </button>
+
+        <button
+          disabled={busy || phase === 'idle'}
+          onClick={() => call('/api/reset')}
+          style={{
+            ...btnStyle('linear-gradient(135deg, #64748b, #94a3b8)', busy || phase === 'idle'),
+            width: '100%',
+            marginBottom: 20,
+          }}
+        >
+          🔄 Đặt lại (xoá phiên, quay về màn hình chờ)
         </button>
 
         {error && <p style={{ color: '#ff8a8a', marginBottom: 16, fontSize: 14 }}>{error}</p>}
