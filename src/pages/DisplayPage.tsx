@@ -118,6 +118,12 @@ export default function DisplayPage() {
 
   const totalVotes = counts.reduce((sum, c) => sum + c.votes, 0)
   const maxVotes = Math.max(1, ...counts.map((c) => c.votes))
+  const minVotes = counts.length > 0 ? Math.min(...counts.map((c) => c.votes)) : 0
+  // Sized by where each team sits between the current lowest and highest
+  // count, not vote-count-vs-max alone — vs-max alone compresses toward the
+  // top once every team has racked up a lot of votes (e.g. 32 vs 51 is a
+  // big lead, but 32/51 and 51/51 look nearly identical as raw ratios).
+  const voteSpread = Math.max(1, maxVotes - minVotes)
   // All teams tied for first place are winners, not just the first one found —
   // a 3-way tie should crown all 3, not arbitrarily pick one.
   const winnerIds = new Set(
@@ -298,7 +304,8 @@ export default function DisplayPage() {
               const isWinner = winnerIds.has(c.team_id)
               const displayName = revealed ? c.name : 'Đội ẩn danh'
 
-              const idealPx = ((MIN_FONT_VH + (c.votes / maxVotes) * (MAX_FONT_VH - MIN_FONT_VH)) / 100) * viewport.height
+              const sizeRatio = (c.votes - minVotes) / voteSpread
+              const idealPx = ((MIN_FONT_VH + sizeRatio * (MAX_FONT_VH - MIN_FONT_VH)) / 100) * viewport.height
               // Capped by the name's actual length too, so a long real team
               // name can't overflow the screen the way a fixed vh/vw split
               // would once revealed — vh scaling alone doesn't know text length.
@@ -333,12 +340,18 @@ export default function DisplayPage() {
                         whiteSpace: 'nowrap',
                         transform: `rotate(${rotation}deg)`,
                         transition: 'font-size 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.4s ease',
-                        animation: `pop-in 0.5s ease-out, float ${5 + delay}s ease-in-out ${delay}s infinite`,
-                        ...(pulseId === c.team_id
-                          ? { animation: `pulse-glow 0.9s ease-out` }
-                          : isWinner
-                            ? { animation: `crown-bounce 1.4s ease-in-out infinite` }
-                            : {}),
+                        // float only ever touches `transform`, and pulse-glow /
+                        // crown-glow only ever touch `filter` — layered together
+                        // like this, a new vote's glow can't interrupt or snap
+                        // the gentle wobble the way overriding `animation` did.
+                        animation: [
+                          'pop-in 0.5s ease-out',
+                          `float ${5 + delay}s ease-in-out ${delay}s infinite`,
+                          pulseId === c.team_id ? 'pulse-glow 0.9s ease-out' : null,
+                          isWinner ? 'crown-glow 1.6s ease-in-out infinite' : null,
+                        ]
+                          .filter(Boolean)
+                          .join(', '),
                       } as unknown as React.CSSProperties
                     }
                   >

@@ -37,28 +37,27 @@ body {
   }
 }
 
+/* Only touches `filter`, never `transform` — so it layers on top of the
+   continuous `float` wobble instead of replacing it and causing a snap. */
 @keyframes pulse-glow {
-  0% {
-    filter: drop-shadow(0 0 0px currentColor);
-    transform: rotate(var(--rot, 0deg)) scale(1);
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0px currentColor) brightness(1);
   }
   35% {
-    filter: drop-shadow(0 0 30px currentColor);
-    transform: rotate(var(--rot, 0deg)) scale(1.22);
-  }
-  100% {
-    filter: drop-shadow(0 0 0px currentColor);
-    transform: rotate(var(--rot, 0deg)) scale(1);
+    filter: drop-shadow(0 0 34px currentColor) brightness(1.35);
   }
 }
 
-@keyframes crown-bounce {
+/* Same rule: filter-only, so the winner's crown glow coexists with float
+   instead of taking over `transform` and interrupting the wobble. */
+@keyframes crown-glow {
   0%,
   100% {
-    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 8px currentColor);
   }
   50% {
-    transform: translateY(-6px) scale(1.05);
+    filter: drop-shadow(0 0 26px currentColor);
   }
 }
 
