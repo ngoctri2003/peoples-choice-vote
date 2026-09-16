@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useActiveSession, sessionPhase } from '../lib/useActiveSession'
 import { useCountdown } from '../lib/useCountdown'
 import { useTeams } from '../lib/useTeams'
+import { useReportPresence } from '../lib/presence'
 import { getVoterToken, getVotedTeamIds, saveVotedTeamIds } from '../lib/voterToken'
 import Blobs, { GRADIENT_TEXT } from '../components/Blobs'
 
@@ -15,6 +16,7 @@ export default function VotePage() {
   const { label, isOver } = useCountdown(session?.ends_at, session?.paused ? session.paused_at : null)
   const paused = session?.paused ?? false
   const teams = useTeams()
+  useReportPresence()
   const [selected, setSelected] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)

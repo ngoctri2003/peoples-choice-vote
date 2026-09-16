@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase, type VoteCount } from '../lib/supabase'
 import { useActiveSession, sessionPhase } from '../lib/useActiveSession'
 import { useCountdown } from '../lib/useCountdown'
+import { useOnlineCount } from '../lib/presence'
 import { GRADIENT_TEXT } from '../components/Blobs'
+import QrCode from '../components/QrCode'
 
 const COLORS = ['#ff5da2', '#5ad1ff', '#ffd166', '#7bf1a8', '#c792ff']
 const GOLD = '#ffd166'
@@ -28,6 +30,8 @@ export default function DisplayPage() {
   const { label, isOver, msLeft } = useCountdown(session?.ends_at, session?.paused ? session.paused_at : null)
   const [counts, setCounts] = useState<VoteCount[]>([])
   const [pulseId, setPulseId] = useState<string | null>(null)
+  const onlineCount = useOnlineCount()
+  const voteUrl = `${window.location.origin}/vote`
 
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
@@ -186,8 +190,41 @@ export default function DisplayPage() {
 
         {phase === 'idle' && (
           <Centered>
-            <div style={{ fontSize: 'clamp(24px, 3vw, 36px)', opacity: 0.85 }}>
-              Đang chờ MC bắt đầu bình chọn…
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6vw',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                <QrCode value={voteUrl} size={260} />
+                <div style={{ fontSize: 18, opacity: 0.75 }}>Quét mã để bình chọn</div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: '50%',
+                    border: `3px solid ${GOLD}`,
+                    boxShadow: `0 0 40px ${GOLD}55`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(255,209,102,0.06)',
+                    animation: 'ring-pulse 2.2s ease-out infinite',
+                  }}
+                >
+                  <div style={{ fontSize: 56, fontWeight: 900, color: GOLD, lineHeight: 1 }}>{onlineCount}</div>
+                  <div style={{ fontSize: 15, opacity: 0.8, marginTop: 6 }}>người đang chờ</div>
+                </div>
+                <div style={{ fontSize: 18, opacity: 0.75 }}>Đang chờ MC bắt đầu bình chọn…</div>
+              </div>
             </div>
           </Centered>
         )}
