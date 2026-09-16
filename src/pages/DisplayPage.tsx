@@ -199,7 +199,7 @@ export default function DisplayPage() {
                 padding: '1vh 2vw',
               }}
             >
-              <QrCode value={voteUrl} size="min(90vh, 46vw)" />
+              <QrCode value={voteUrl} size="min(80vh, 40vw)" />
             </div>
 
             <div
@@ -215,7 +215,7 @@ export default function DisplayPage() {
             >
               <div
                 style={{
-                  width: 'min(78vh, 46vw)',
+                  width: 'min(70vh, 40vw)',
                   aspectRatio: '1 / 1',
                   borderRadius: '50%',
                   border: `3px solid ${GOLD}`,
