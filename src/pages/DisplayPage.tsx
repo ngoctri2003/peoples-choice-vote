@@ -274,7 +274,7 @@ export default function DisplayPage() {
                 </div>
               </div>
               <div style={{ fontSize: 'clamp(18px, 2.4vw, 32px)', color: TEXT_MUTED, fontWeight: 700, textAlign: 'center' }}>
-                Đang chờ MC bắt đầu bình chọn…
+                Đang chờ BTC bắt đầu bình chọn…
               </div>
             </div>
           </div>

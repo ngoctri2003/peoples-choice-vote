@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, type Team } from './supabase'
 
-// Keeps team names live: if the MC edits a name on /mc while this page is
+// Keeps team names live: if the BTC edits a name on /mc while this page is
 // already open, it updates here too instead of needing a manual reload.
 export function useTeams() {
   const [teams, setTeams] = useState<Team[]>([])

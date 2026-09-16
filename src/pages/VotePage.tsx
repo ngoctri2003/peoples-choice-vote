@@ -76,7 +76,7 @@ export default function VotePage() {
           <Centered>
             <div style={{ fontSize: 64, animation: 'float 3s ease-in-out infinite' }}>🗳️</div>
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Bình chọn chưa bắt đầu</h2>
-            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>Vui lòng chờ MC thông báo bắt đầu nhé!</p>
+            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>Vui lòng chờ BTC thông báo bắt đầu nhé!</p>
           </Centered>
         </Card>
       </Shell>
@@ -104,7 +104,7 @@ export default function VotePage() {
           <Centered>
             <div style={{ fontSize: 64 }}>⏸️</div>
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Đang tạm dừng bình chọn</h2>
-            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>MC sẽ tiếp tục trong giây lát, vui lòng chờ…</p>
+            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>BTC sẽ tiếp tục trong giây lát, vui lòng chờ…</p>
           </Centered>
         </Card>
       </Shell>
