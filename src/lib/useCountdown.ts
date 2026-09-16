@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
 
-export function useCountdown(endsAt: string | null | undefined) {
+// When pausedAt is set, the countdown freezes at (endsAt - pausedAt) instead
+// of continuing to tick down against the real clock, so a pause visibly
+// stops the clock rather than just delaying when it hits zero.
+export function useCountdown(endsAt: string | null | undefined, pausedAt?: string | null) {
+  const anchor = pausedAt ? new Date(pausedAt).getTime() : null
+
   const [msLeft, setMsLeft] = useState(() =>
-    endsAt ? new Date(endsAt).getTime() - Date.now() : 0,
+    endsAt ? new Date(endsAt).getTime() - (anchor ?? Date.now()) : 0,
   )
 
   useEffect(() => {
@@ -10,11 +15,15 @@ export function useCountdown(endsAt: string | null | undefined) {
       setMsLeft(0)
       return
     }
+    if (anchor !== null) {
+      setMsLeft(new Date(endsAt).getTime() - anchor)
+      return
+    }
     const tick = () => setMsLeft(new Date(endsAt).getTime() - Date.now())
     tick()
     const id = setInterval(tick, 250)
     return () => clearInterval(id)
-  }, [endsAt])
+  }, [endsAt, anchor])
 
   const clamped = Math.max(0, msLeft)
   const totalSeconds = Math.ceil(clamped / 1000)

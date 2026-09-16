@@ -22,6 +22,8 @@ export type VotingSession = {
   ends_at: string
   status: 'open' | 'closed'
   revealed: boolean
+  paused: boolean
+  paused_at: string | null
 }
 
 export type VoteCount = {

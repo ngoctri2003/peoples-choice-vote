@@ -9,7 +9,7 @@ export default function McPage() {
   const [params] = useSearchParams()
   const key = params.get('key') ?? ''
   const { session } = useActiveSession()
-  const { label, isOver } = useCountdown(session?.ends_at)
+  const { label, isOver } = useCountdown(session?.ends_at, session?.paused ? session.paused_at : null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,6 +20,7 @@ export default function McPage() {
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
   const revealed = session?.revealed ?? false
+  const paused = session?.paused ?? false
 
   useEffect(() => {
     supabase
@@ -104,7 +105,7 @@ export default function McPage() {
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
           <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
             {phase === 'idle' && 'Chưa bắt đầu'}
-            {phase === 'open' && `Đang mở — còn ${label}`}
+            {phase === 'open' && (paused ? `Đang tạm dừng — còn ${label}` : `Đang mở — còn ${label}`)}
             {phase === 'closed' && (revealed ? 'Đã đóng — đã hiển thị kết quả' : 'Đã đóng — chưa hiển thị tên đội')}
           </span>
         </div>
@@ -131,6 +132,21 @@ export default function McPage() {
             ⏹ Dừng ngay
           </button>
         </div>
+
+        <button
+          disabled={busy || phase !== 'open'}
+          onClick={() => call(paused ? '/api/resume-session' : '/api/pause-session')}
+          style={{
+            ...btnStyle(
+              paused ? 'linear-gradient(135deg, #16a34a, #7bf1a8)' : 'linear-gradient(135deg, #eab308, #fde68a)',
+              busy || phase !== 'open',
+            ),
+            width: '100%',
+            marginBottom: 12,
+          }}
+        >
+          {paused ? '▶️ Tiếp tục' : '⏸ Tạm dừng'}
+        </button>
 
         <button
           disabled={busy || phase !== 'closed' || revealed}

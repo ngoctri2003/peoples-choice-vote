@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase, type Team } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import { useActiveSession, sessionPhase } from '../lib/useActiveSession'
 import { useCountdown } from '../lib/useCountdown'
+import { useTeams } from '../lib/useTeams'
 import { getVoterToken, getVotedTeamIds, saveVotedTeamIds } from '../lib/voterToken'
 import Blobs, { GRADIENT_TEXT } from '../components/Blobs'
 
@@ -11,8 +12,9 @@ const TEAM_COLORS = ['#ff5da2', '#5ad1ff', '#ffd166', '#7bf1a8', '#c792ff']
 
 export default function VotePage() {
   const { session, loading: sessionLoading } = useActiveSession()
-  const { label, isOver } = useCountdown(session?.ends_at)
-  const [teams, setTeams] = useState<Team[]>([])
+  const { label, isOver } = useCountdown(session?.ends_at, session?.paused ? session.paused_at : null)
+  const paused = session?.paused ?? false
+  const teams = useTeams()
   const [selected, setSelected] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -20,14 +22,6 @@ export default function VotePage() {
 
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
-
-  useEffect(() => {
-    supabase
-      .from('teams')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .then(({ data }) => setTeams((data as Team[]) ?? []))
-  }, [])
 
   useEffect(() => {
     if (session) setVotedTeamIds(getVotedTeamIds(session.id))
@@ -95,6 +89,20 @@ export default function VotePage() {
             <div style={{ fontSize: 64 }}>⏱️</div>
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Bình chọn đã kết thúc</h2>
             <p style={{ opacity: 0.65, margin: 0, fontSize: 15 }}>Cảm ơn bạn đã tham gia!</p>
+          </Centered>
+        </Card>
+      </Shell>
+    )
+  }
+
+  if (phase === 'open' && paused) {
+    return (
+      <Shell>
+        <Card>
+          <Centered>
+            <div style={{ fontSize: 64 }}>⏸️</div>
+            <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Đang tạm dừng bình chọn</h2>
+            <p style={{ opacity: 0.65, margin: 0, fontSize: 15 }}>MC sẽ tiếp tục trong giây lát, vui lòng chờ…</p>
           </Centered>
         </Card>
       </Shell>

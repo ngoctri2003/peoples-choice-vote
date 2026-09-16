@@ -19,7 +19,11 @@ create table if not exists voting_sessions (
   status text not null default 'open' check (status in ('open', 'closed')),
   -- Team names stay hidden on /display (shown as "Đội N") until the MC
   -- explicitly reveals them, for a game-show-style results moment.
-  revealed boolean not null default false
+  revealed boolean not null default false,
+  -- While paused, votes are rejected and the countdown is frozen; resuming
+  -- shifts ends_at forward by the paused duration so remaining time is kept.
+  paused boolean not null default false,
+  paused_at timestamptz
 );
 
 create table if not exists votes (
@@ -108,6 +112,7 @@ create policy "anon can insert votes while session is open" on votes
       select 1 from voting_sessions s
       where s.id = session_id
         and s.status = 'open'
+        and not s.paused
         and now() < s.ends_at
     )
     and voter_pick_count(session_id, voter_token) < 3
@@ -119,6 +124,7 @@ create policy "anon can insert votes while session is open" on votes
 -- or run:
 alter publication supabase_realtime add table votes;
 alter publication supabase_realtime add table voting_sessions;
+alter publication supabase_realtime add table teams;
 
 -- ---------- Seed the 5 finalist teams ----------
 -- Replace with the actual finalist CODE/name once known, e.g.:

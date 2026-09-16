@@ -25,12 +25,13 @@ function seededWobble(id: string) {
 
 export default function DisplayPage() {
   const { session } = useActiveSession()
-  const { label, isOver, msLeft } = useCountdown(session?.ends_at)
+  const { label, isOver, msLeft } = useCountdown(session?.ends_at, session?.paused ? session.paused_at : null)
   const [counts, setCounts] = useState<VoteCount[]>([])
   const [pulseId, setPulseId] = useState<string | null>(null)
 
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
+  const paused = session?.paused ?? false
 
   const loadCounts = useCallback(async () => {
     if (!session) {
@@ -63,6 +64,18 @@ export default function DisplayPage() {
       supabase.removeChannel(channel)
     }
   }, [session, loadCounts])
+
+  // Team names come through get_vote_counts, so a name edit on /mc needs its
+  // own trigger to refetch — a vote INSERT alone wouldn't pick it up.
+  useEffect(() => {
+    const channel = supabase
+      .channel('teams_changes_display')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => loadCounts())
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadCounts])
 
   const revealed = session?.revealed ?? false
 
@@ -146,16 +159,28 @@ export default function DisplayPage() {
               fontVariantNumeric: 'tabular-nums',
               padding: '10px 26px',
               borderRadius: 999,
-              background: phase === 'open' ? 'rgba(255,255,255,0.12)' : 'rgba(255,209,102,0.15)',
-              border: `2px solid ${phase === 'open' ? 'rgba(255,255,255,0.25)' : GOLD}`,
-              color: phase === 'closed' ? GOLD : '#fff',
+              background: paused
+                ? 'rgba(148,163,184,0.18)'
+                : phase === 'open'
+                  ? 'rgba(255,255,255,0.12)'
+                  : 'rgba(255,209,102,0.15)',
+              border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(255,255,255,0.25)' : GOLD}`,
+              color: paused ? '#cbd5e1' : phase === 'closed' ? GOLD : '#fff',
               whiteSpace: 'nowrap',
               flexShrink: 0,
               animation:
-                phase === 'open' && msLeft <= 30000 ? 'ring-pulse 1.4s ease-out infinite' : undefined,
+                phase === 'open' && !paused && msLeft <= 30000
+                  ? 'ring-pulse 1.4s ease-out infinite'
+                  : undefined,
             }}
           >
-            {phase === 'idle' ? '--:--' : phase === 'closed' ? '🎉 ĐÃ KẾT THÚC' : `⏳ ${label}`}
+            {phase === 'idle'
+              ? '--:--'
+              : phase === 'closed'
+                ? '🎉 ĐÃ KẾT THÚC'
+                : paused
+                  ? `⏸ TẠM DỪNG (${label})`
+                  : `⏳ ${label}`}
           </div>
         </div>
 

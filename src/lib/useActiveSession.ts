@@ -45,7 +45,7 @@ export function useActiveSession() {
 
 export function sessionPhase(session: VotingSession | null): 'idle' | 'open' | 'closed' {
   if (!session) return 'idle'
-  if (session.status === 'closed') return 'closed'
-  if (new Date(session.ends_at).getTime() <= Date.now()) return 'closed'
-  return 'open'
+  // Whether time is actually up is handled by the caller via useCountdown's
+  // isOver (which stays pause-aware); this only reflects the DB status.
+  return session.status === 'closed' ? 'closed' : 'open'
 }
