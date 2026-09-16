@@ -6,10 +6,10 @@ import { useTeams } from '../lib/useTeams'
 import { useReportPresence } from '../lib/presence'
 import { getVoterToken, getVotedTeamIds, saveVotedTeamIds } from '../lib/voterToken'
 import Blobs, { GRADIENT_TEXT } from '../components/Blobs'
+import { TEXT, TEXT_MUTED, CARD_BG, CARD_BORDER, CARD_SHADOW, TEAM_COLORS, GOLD, DANGER, SUBTLE_BG, SUBTLE_BORDER } from '../lib/theme'
 
 const MAX_PICKS = 3
 const TEAM_EMOJI = ['🚀', '🎯', '🔥', '🌟', '💡', '🎮', '🧠', '⚡']
-const TEAM_COLORS = ['#ff5da2', '#5ad1ff', '#ffd166', '#7bf1a8', '#c792ff']
 
 export default function VotePage() {
   const { session, loading: sessionLoading } = useActiveSession()
@@ -76,7 +76,7 @@ export default function VotePage() {
           <Centered>
             <div style={{ fontSize: 64, animation: 'float 3s ease-in-out infinite' }}>🗳️</div>
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Bình chọn chưa bắt đầu</h2>
-            <p style={{ opacity: 0.65, margin: 0, fontSize: 15 }}>Vui lòng chờ MC thông báo bắt đầu nhé!</p>
+            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>Vui lòng chờ MC thông báo bắt đầu nhé!</p>
           </Centered>
         </Card>
       </Shell>
@@ -90,7 +90,7 @@ export default function VotePage() {
           <Centered>
             <div style={{ fontSize: 64 }}>⏱️</div>
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Bình chọn đã kết thúc</h2>
-            <p style={{ opacity: 0.65, margin: 0, fontSize: 15 }}>Cảm ơn bạn đã tham gia!</p>
+            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>Cảm ơn bạn đã tham gia!</p>
           </Centered>
         </Card>
       </Shell>
@@ -104,7 +104,7 @@ export default function VotePage() {
           <Centered>
             <div style={{ fontSize: 64 }}>⏸️</div>
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Đang tạm dừng bình chọn</h2>
-            <p style={{ opacity: 0.65, margin: 0, fontSize: 15 }}>MC sẽ tiếp tục trong giây lát, vui lòng chờ…</p>
+            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>MC sẽ tiếp tục trong giây lát, vui lòng chờ…</p>
           </Centered>
         </Card>
       </Shell>
@@ -118,8 +118,8 @@ export default function VotePage() {
           <Centered>
             <div style={{ fontSize: 64, animation: 'pop-in 0.5s ease-out' }}>✅</div>
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Bạn đã bình chọn rồi!</h2>
-            <p style={{ opacity: 0.65, margin: 0, fontSize: 15 }}>
-              Cảm ơn bạn 💜 Còn lại <strong style={{ color: '#ffd166' }}>{label}</strong>
+            <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>
+              Cảm ơn bạn 💜 Còn lại <strong style={{ color: GOLD }}>{label}</strong>
             </p>
           </Centered>
         </Card>
@@ -140,9 +140,9 @@ export default function VotePage() {
               fontWeight: 800,
               padding: '7px 18px',
               borderRadius: 999,
-              background: 'rgba(255,209,102,0.14)',
-              border: '1px solid rgba(255,209,102,0.4)',
-              color: '#ffd166',
+              background: 'rgba(199,134,10,0.12)',
+              border: `1px solid rgba(199,134,10,0.35)`,
+              color: GOLD,
               marginBottom: 16,
               letterSpacing: 0.3,
             }}
@@ -160,8 +160,8 @@ export default function VotePage() {
           >
             🏆 People's Choice Award
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0, fontSize: 15 }}>
-            Chọn tối đa <strong style={{ color: '#fff' }}>3 đội</strong> yêu thích nhất
+          <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>
+            Chọn tối đa <strong style={{ color: TEXT }}>3 đội</strong> yêu thích nhất
           </p>
         </div>
 
@@ -179,18 +179,18 @@ export default function VotePage() {
                   gap: 14,
                   padding: '15px 16px',
                   borderRadius: 18,
-                  border: isSelected ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.08)',
+                  border: isSelected ? `2px solid ${accent}` : `2px solid ${SUBTLE_BORDER}`,
                   background: isSelected
-                    ? `linear-gradient(135deg, ${accent}2e, ${accent}12)`
-                    : 'rgba(255,255,255,0.04)',
+                    ? `linear-gradient(135deg, ${accent}22, ${accent}0d)`
+                    : SUBTLE_BG,
                   textAlign: 'left',
                   fontSize: 17,
                   fontWeight: 700,
-                  color: '#fff',
+                  color: TEXT,
                   cursor: 'pointer',
                   transition: 'transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
                   transform: isSelected ? 'scale(1.015)' : 'scale(1)',
-                  boxShadow: isSelected ? `0 6px 18px ${accent}33` : 'none',
+                  boxShadow: isSelected ? `0 6px 18px ${accent}2e` : 'none',
                 }}
               >
                 <span
@@ -202,7 +202,7 @@ export default function VotePage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 12,
-                    background: `${accent}26`,
+                    background: `${accent}1f`,
                     flexShrink: 0,
                   }}
                 >
@@ -214,13 +214,13 @@ export default function VotePage() {
                     width: 24,
                     height: 24,
                     borderRadius: '50%',
-                    border: isSelected ? 'none' : '2px solid rgba(255,255,255,0.22)',
+                    border: isSelected ? 'none' : `2px solid ${CARD_BORDER}`,
                     background: isSelected ? accent : 'transparent',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 14,
-                    color: '#0b0620',
+                    color: '#fff',
                     flexShrink: 0,
                     transition: 'background 0.15s ease',
                   }}
@@ -240,7 +240,7 @@ export default function VotePage() {
                 width: i < selected.length ? 22 : 9,
                 height: 9,
                 borderRadius: 999,
-                background: i < selected.length ? '#ffd166' : 'rgba(255,255,255,0.18)',
+                background: i < selected.length ? GOLD : SUBTLE_BORDER,
                 transition: 'all 0.25s ease',
               }}
             />
@@ -248,7 +248,7 @@ export default function VotePage() {
         </div>
 
         {error && (
-          <p style={{ color: '#ff8a8a', textAlign: 'center', marginTop: 10, fontSize: 14 }}>{error}</p>
+          <p style={{ color: DANGER, textAlign: 'center', marginTop: 10, fontSize: 14 }}>{error}</p>
         )}
 
         <button
@@ -262,13 +262,13 @@ export default function VotePage() {
             border: 'none',
             background:
               selected.length === 0
-                ? 'rgba(255,255,255,0.1)'
-                : 'linear-gradient(135deg, #ff5da2, #c792ff)',
-            color: selected.length === 0 ? 'rgba(255,255,255,0.4)' : '#fff',
+                ? SUBTLE_BG
+                : `linear-gradient(135deg, ${TEAM_COLORS[0]}, ${TEAM_COLORS[4]})`,
+            color: selected.length === 0 ? TEXT_MUTED : '#fff',
             fontSize: 18,
             fontWeight: 800,
             cursor: selected.length === 0 ? 'not-allowed' : 'pointer',
-            boxShadow: selected.length === 0 ? 'none' : '0 10px 28px rgba(199,146,255,0.4)',
+            boxShadow: selected.length === 0 ? 'none' : `0 10px 28px ${TEAM_COLORS[4]}40`,
             transition: 'transform 0.15s ease, box-shadow 0.2s ease',
           }}
         >
@@ -301,13 +301,13 @@ function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        background: CARD_BG,
+        border: `1px solid ${CARD_BORDER}`,
         borderRadius: 28,
         padding: '30px 24px',
         backdropFilter: 'blur(16px)',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-        color: '#fff',
+        boxShadow: CARD_SHADOW,
+        color: TEXT,
       }}
     >
       {children}

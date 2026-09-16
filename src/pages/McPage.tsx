@@ -4,6 +4,7 @@ import { supabase, type Team } from '../lib/supabase'
 import { useActiveSession, sessionPhase } from '../lib/useActiveSession'
 import { useCountdown } from '../lib/useCountdown'
 import Blobs, { GRADIENT_TEXT } from '../components/Blobs'
+import { TEXT, TEXT_MUTED, CARD_BG, CARD_BORDER, CARD_SHADOW, DANGER, SUCCESS, INPUT_BG, INPUT_BORDER, SUBTLE_BG } from '../lib/theme'
 
 export default function McPage() {
   const [params] = useSearchParams()
@@ -66,7 +67,7 @@ export default function McPage() {
     }
   }
 
-  const statusColor = phase === 'open' ? '#7bf1a8' : phase === 'closed' ? '#ff8a8a' : 'rgba(255,255,255,0.6)'
+  const statusColor = phase === 'open' ? SUCCESS : phase === 'closed' ? DANGER : TEXT_MUTED
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -79,17 +80,17 @@ export default function McPage() {
           maxWidth: 460,
           padding: 28,
           borderRadius: 28,
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: CARD_BG,
+          border: `1px solid ${CARD_BORDER}`,
           backdropFilter: 'blur(16px)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-          color: '#fff',
+          boxShadow: CARD_SHADOW,
+          color: TEXT,
         }}
       >
         <h1 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 900, ...GRADIENT_TEXT }}>
           🎛️ Điều khiển bình chọn
         </h1>
-        <p style={{ margin: '0 0 20px', color: 'rgba(255,255,255,0.55)', fontSize: 14 }}>People's Choice Award</p>
+        <p style={{ margin: '0 0 20px', color: TEXT_MUTED, fontSize: 14 }}>People's Choice Award</p>
 
         <div
           style={{
@@ -98,7 +99,7 @@ export default function McPage() {
             gap: 10,
             padding: '12px 16px',
             borderRadius: 14,
-            background: 'rgba(255,255,255,0.05)',
+            background: SUBTLE_BG,
             marginBottom: 20,
           }}
         >
@@ -111,7 +112,7 @@ export default function McPage() {
         </div>
 
         {!key && (
-          <p style={{ color: '#ff8a8a', fontSize: 13, marginBottom: 16 }}>
+          <p style={{ color: DANGER, fontSize: 13, marginBottom: 16 }}>
             Thiếu tham số <code>?key=...</code> trên URL — không thể gọi API điều khiển.
           </p>
         )}
@@ -120,14 +121,14 @@ export default function McPage() {
           <button
             disabled={busy || phase === 'open'}
             onClick={() => call('/api/start-session')}
-            style={btnStyle('linear-gradient(135deg, #16a34a, #7bf1a8)', busy || phase === 'open')}
+            style={btnStyle('linear-gradient(135deg, #16a34a, #4ade80)', busy || phase === 'open')}
           >
             ▶ Bắt đầu (5:00)
           </button>
           <button
             disabled={busy || phase !== 'open'}
             onClick={() => call('/api/stop-session')}
-            style={btnStyle('linear-gradient(135deg, #dc2626, #ff8a8a)', busy || phase !== 'open')}
+            style={btnStyle('linear-gradient(135deg, #dc2626, #f87171)', busy || phase !== 'open')}
           >
             ⏹ Dừng ngay
           </button>
@@ -138,7 +139,7 @@ export default function McPage() {
           onClick={() => call(paused ? '/api/resume-session' : '/api/pause-session')}
           style={{
             ...btnStyle(
-              paused ? 'linear-gradient(135deg, #16a34a, #7bf1a8)' : 'linear-gradient(135deg, #eab308, #fde68a)',
+              paused ? 'linear-gradient(135deg, #16a34a, #4ade80)' : 'linear-gradient(135deg, #d97706, #fbbf24)',
               busy || phase !== 'open',
             ),
             width: '100%',
@@ -152,7 +153,7 @@ export default function McPage() {
           disabled={busy || phase !== 'closed' || revealed}
           onClick={() => call('/api/reveal-results')}
           style={{
-            ...btnStyle('linear-gradient(135deg, #ffd166, #ff5da2)', busy || phase !== 'closed' || revealed),
+            ...btnStyle('linear-gradient(135deg, #c7860a, #e0367a)', busy || phase !== 'closed' || revealed),
             width: '100%',
             marginBottom: 12,
           }}
@@ -172,10 +173,10 @@ export default function McPage() {
           🔄 Đặt lại (xoá phiên, quay về màn hình chờ)
         </button>
 
-        {error && <p style={{ color: '#ff8a8a', marginBottom: 16, fontSize: 14 }}>{error}</p>}
+        {error && <p style={{ color: DANGER, marginBottom: 16, fontSize: 14 }}>{error}</p>}
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 18 }}>
-          <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>
+        <div style={{ borderTop: `1px solid ${CARD_BORDER}`, paddingTop: 18 }}>
+          <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: 14, color: TEXT }}>
             Tên 5 đội (ẩn khỏi màn hình chính đến khi hiển thị kết quả)
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -188,9 +189,9 @@ export default function McPage() {
                 style={{
                   padding: '10px 12px',
                   borderRadius: 10,
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: '#fff',
+                  border: `1px solid ${INPUT_BORDER}`,
+                  background: INPUT_BG,
+                  color: TEXT,
                   fontSize: 14,
                 }}
               />
@@ -200,7 +201,7 @@ export default function McPage() {
             disabled={busy || teams.length === 0}
             onClick={saveTeamNames}
             style={{
-              ...btnStyle('linear-gradient(135deg, #5ad1ff, #c792ff)', busy || teams.length === 0),
+              ...btnStyle('linear-gradient(135deg, #0f8fd1, #8a3ff0)', busy || teams.length === 0),
               width: '100%',
               marginTop: 12,
             }}
@@ -219,8 +220,8 @@ function btnStyle(gradient: string, disabled: boolean): React.CSSProperties {
     padding: '14px 0',
     borderRadius: 14,
     border: 'none',
-    background: disabled ? 'rgba(255,255,255,0.1)' : gradient,
-    color: disabled ? 'rgba(255,255,255,0.4)' : '#0b0620',
+    background: disabled ? SUBTLE_BG : gradient,
+    color: disabled ? TEXT_MUTED : '#fff',
     fontSize: 15,
     fontWeight: 800,
     cursor: disabled ? 'not-allowed' : 'pointer',

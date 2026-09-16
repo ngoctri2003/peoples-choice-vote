@@ -10,8 +10,8 @@ export default function Blobs() {
           width: '50vw',
           height: '50vw',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,93,162,0.35), transparent 70%)',
-          filter: 'blur(40px)',
+          background: 'radial-gradient(circle, rgba(224,54,122,0.16), transparent 70%)',
+          filter: 'blur(50px)',
           animation: 'blob-drift-1 16s ease-in-out infinite',
         }}
       />
@@ -23,8 +23,8 @@ export default function Blobs() {
           width: '55vw',
           height: '55vw',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(90,209,255,0.3), transparent 70%)',
-          filter: 'blur(40px)',
+          background: 'radial-gradient(circle, rgba(15,143,209,0.14), transparent 70%)',
+          filter: 'blur(50px)',
           animation: 'blob-drift-2 20s ease-in-out infinite',
         }}
       />
@@ -36,8 +36,8 @@ export default function Blobs() {
           width: '35vw',
           height: '35vw',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(199,146,255,0.25), transparent 70%)',
-          filter: 'blur(50px)',
+          background: 'radial-gradient(circle, rgba(138,63,240,0.12), transparent 70%)',
+          filter: 'blur(55px)',
           animation: 'blob-drift-1 24s ease-in-out infinite reverse',
         }}
       />
@@ -46,7 +46,7 @@ export default function Blobs() {
 }
 
 export const GRADIENT_TEXT: React.CSSProperties = {
-  backgroundImage: 'linear-gradient(90deg, #ff5da2, #ffd166, #5ad1ff, #c792ff, #ff5da2)',
+  backgroundImage: 'linear-gradient(90deg, #e0367a, #c7860a, #0f8fd1, #8a3ff0, #e0367a)',
   backgroundSize: '200% auto',
   WebkitBackgroundClip: 'text',
   backgroundClip: 'text',

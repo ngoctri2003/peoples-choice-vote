@@ -5,9 +5,7 @@ import { useCountdown } from '../lib/useCountdown'
 import { useOnlineCount } from '../lib/presence'
 import { GRADIENT_TEXT } from '../components/Blobs'
 import QrCode from '../components/QrCode'
-
-const COLORS = ['#ff5da2', '#5ad1ff', '#ffd166', '#7bf1a8', '#c792ff']
-const GOLD = '#ffd166'
+import { TEXT, TEXT_MUTED, PAGE_BG, TEAM_COLORS, GOLD } from '../lib/theme'
 
 // Sizes are viewport-height-relative (not px) so the cloud always fits the
 // screen without scrolling, no matter how lopsided the vote counts get —
@@ -140,7 +138,7 @@ export default function DisplayPage() {
         left: Math.random() * 100,
         delay: Math.random() * 3,
         duration: 3 + Math.random() * 2.5,
-        color: [...COLORS, GOLD][i % (COLORS.length + 1)],
+        color: [...TEAM_COLORS, GOLD][i % (TEAM_COLORS.length + 1)],
         size: 6 + Math.random() * 8,
       })),
     [winnerKey],
@@ -152,12 +150,9 @@ export default function DisplayPage() {
         height: '100vh',
         overflow: 'hidden',
         position: 'relative',
-        color: '#fff',
+        color: TEXT,
         fontFamily: 'inherit',
-        background:
-          'radial-gradient(circle at 15% 20%, rgba(255,93,162,0.35), transparent 45%), ' +
-          'radial-gradient(circle at 85% 75%, rgba(90,209,255,0.3), transparent 45%), ' +
-          'linear-gradient(135deg, #180b33, #0b0620 60%)',
+        background: PAGE_BG,
         backgroundSize: '160% 160%, 160% 160%, 100% 100%',
         animation: 'bg-drift 18s ease-in-out infinite',
       }}
@@ -207,12 +202,12 @@ export default function DisplayPage() {
               padding: '10px 26px',
               borderRadius: 999,
               background: paused
-                ? 'rgba(148,163,184,0.18)'
+                ? 'rgba(100,116,139,0.12)'
                 : phase === 'open'
-                  ? 'rgba(255,255,255,0.12)'
-                  : 'rgba(255,209,102,0.15)',
-              border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(255,255,255,0.25)' : GOLD}`,
-              color: paused ? '#cbd5e1' : phase === 'closed' ? GOLD : '#fff',
+                  ? 'rgba(28,19,48,0.06)'
+                  : 'rgba(199,134,10,0.12)',
+              border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(28,19,48,0.16)' : GOLD}`,
+              color: paused ? '#64748b' : phase === 'closed' ? GOLD : TEXT,
               whiteSpace: 'nowrap',
               flexShrink: 0,
               animation:
@@ -262,23 +257,23 @@ export default function DisplayPage() {
                   aspectRatio: '1 / 1',
                   borderRadius: '50%',
                   border: `3px solid ${GOLD}`,
-                  boxShadow: `0 0 60px ${GOLD}55`,
+                  boxShadow: `0 0 50px ${GOLD}33`,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: 'rgba(255,209,102,0.06)',
+                  background: 'rgba(199,134,10,0.05)',
                   animation: 'ring-pulse 2.2s ease-out infinite',
                 }}
               >
                 <div style={{ fontSize: 'min(18vh, 12vw)', fontWeight: 900, color: GOLD, lineHeight: 1 }}>
                   {onlineCount}
                 </div>
-                <div style={{ fontSize: 'clamp(16px, 2vw, 26px)', opacity: 0.8, marginTop: '1.5vh' }}>
+                <div style={{ fontSize: 'clamp(16px, 2vw, 26px)', color: TEXT_MUTED, marginTop: '1.5vh' }}>
                   người đang chờ
                 </div>
               </div>
-              <div style={{ fontSize: 'clamp(18px, 2.4vw, 32px)', opacity: 0.8, fontWeight: 700, textAlign: 'center' }}>
+              <div style={{ fontSize: 'clamp(18px, 2.4vw, 32px)', color: TEXT_MUTED, fontWeight: 700, textAlign: 'center' }}>
                 Đang chờ MC bắt đầu bình chọn…
               </div>
             </div>
@@ -312,7 +307,7 @@ export default function DisplayPage() {
               const maxWidthPx = viewport.width * 0.88
               const widthCappedPx = maxWidthPx / (displayName.length * AVG_CHAR_WIDTH_RATIO)
               const fontSize = `${Math.min(idealPx, widthCappedPx)}px`
-              const color = isWinner ? GOLD : COLORS[i % COLORS.length]
+              const color = isWinner ? GOLD : TEAM_COLORS[i % TEAM_COLORS.length]
               const { rotation, delay } = seededWobble(c.team_id)
               const dimmed = phase === 'closed' && !isWinner && totalVotes > 0
 
@@ -324,7 +319,7 @@ export default function DisplayPage() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 6,
-                    opacity: dimmed ? 0.45 : 1,
+                    opacity: dimmed ? 0.4 : 1,
                     transition: 'opacity 0.6s ease',
                   }}
                 >
@@ -358,7 +353,7 @@ export default function DisplayPage() {
                     {isWinner ? '👑 ' : ''}
                     {displayName}
                   </div>
-                  <div style={{ fontSize: 16, opacity: 0.7, fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontSize: 16, color: TEXT_MUTED, fontVariantNumeric: 'tabular-nums' }}>
                     {c.votes} vote{c.votes === 1 ? '' : 's'}
                   </div>
                 </div>
@@ -367,7 +362,7 @@ export default function DisplayPage() {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', fontSize: 15, opacity: 0.5 }}>
+        <div style={{ textAlign: 'center', fontSize: 15, color: TEXT_MUTED }}>
           {totalVotes} lượt bình chọn đã ghi nhận
         </div>
       </div>
