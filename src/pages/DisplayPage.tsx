@@ -189,7 +189,7 @@ export default function DisplayPage() {
               const { rotation, delay } = seededWobble(c.team_id)
               const dimmed = phase === 'closed' && !isWinner && totalVotes > 0
 
-              const displayName = revealed ? c.name : `Đội ${c.sort_order}`
+              const displayName = revealed ? c.name : 'Đội ẩn danh'
 
               return (
                 <div
