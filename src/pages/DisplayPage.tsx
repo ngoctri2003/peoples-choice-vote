@@ -25,6 +25,22 @@ function seededWobble(id: string) {
   return { rotation, delay }
 }
 
+function stringHash(s: string) {
+  let hash = 0
+  for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0
+  return hash
+}
+
+// Positions here are deliberately shuffled relative to /vote's fixed
+// sort_order, so the audience can't match a big-screen bar to a team just by
+// its position while names are still hidden. The order is stable for a given
+// session (same shuffle on every re-render/reload) but differs per round.
+function shuffleForSession<T extends { team_id: string }>(items: T[], sessionId: string): T[] {
+  return [...items].sort(
+    (a, b) => stringHash(sessionId + a.team_id) - stringHash(sessionId + b.team_id),
+  )
+}
+
 export default function DisplayPage() {
   const { session } = useActiveSession()
   const { label, isOver, msLeft } = useCountdown(session?.ends_at, session?.paused ? session.paused_at : null)
@@ -82,6 +98,7 @@ export default function DisplayPage() {
   }, [loadCounts])
 
   const revealed = session?.revealed ?? false
+  const shuffledCounts = session ? shuffleForSession(counts, session.id) : counts
 
   const totalVotes = counts.reduce((sum, c) => sum + c.votes, 0)
   const maxVotes = Math.max(1, ...counts.map((c) => c.votes))
@@ -257,7 +274,7 @@ export default function DisplayPage() {
               padding: '2vh 2vw',
             }}
           >
-            {counts.map((c, i) => {
+            {shuffledCounts.map((c, i) => {
               const isWinner = winner?.team_id === c.team_id
               const fontSize = `${MIN_FONT_VH + (c.votes / maxVotes) * (MAX_FONT_VH - MIN_FONT_VH)}vh`
               const color = isWinner ? GOLD : COLORS[i % COLORS.length]
