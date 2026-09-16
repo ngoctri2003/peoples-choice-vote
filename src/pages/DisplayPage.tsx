@@ -12,8 +12,8 @@ const GOLD = '#ffd166'
 // Sizes are viewport-height-relative (not px) so the cloud always fits the
 // screen without scrolling, no matter how lopsided the vote counts get —
 // a projector screen has no scrollbar.
-const MIN_FONT_VH = 3.5
-const MAX_FONT_VH = 13
+const MIN_FONT_VH = 5.5
+const MAX_FONT_VH = 17
 
 // A small deterministic wobble per team so the cloud feels organic
 // instead of a perfect grid, without jittering on every re-render.
@@ -41,6 +41,21 @@ function shuffleForSession<T extends { team_id: string }>(items: T[], sessionId:
   )
 }
 
+// Approximate average glyph width as a fraction of font-size for this bold
+// rounded font — used to cap font-size by actual text length so a long real
+// team name can't overflow the screen the way a fixed vw fraction would.
+const AVG_CHAR_WIDTH_RATIO = 0.62
+
+function useViewportSize() {
+  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight })
+  useEffect(() => {
+    const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight })
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return size
+}
+
 export default function DisplayPage() {
   const { session } = useActiveSession()
   const { label, isOver, msLeft } = useCountdown(session?.ends_at, session?.paused ? session.paused_at : null)
@@ -48,6 +63,7 @@ export default function DisplayPage() {
   const [pulseId, setPulseId] = useState<string | null>(null)
   const onlineCount = useOnlineCount()
   const voteUrl = `${window.location.origin}/vote`
+  const viewport = useViewportSize()
 
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
@@ -102,10 +118,14 @@ export default function DisplayPage() {
 
   const totalVotes = counts.reduce((sum, c) => sum + c.votes, 0)
   const maxVotes = Math.max(1, ...counts.map((c) => c.votes))
-  const winner =
+  // All teams tied for first place are winners, not just the first one found —
+  // a 3-way tie should crown all 3, not arbitrarily pick one.
+  const winnerIds = new Set(
     phase === 'closed' && counts.length > 0 && totalVotes > 0
-      ? counts.reduce((a, b) => (b.votes > a.votes ? b : a))
-      : null
+      ? counts.filter((c) => c.votes === maxVotes).map((c) => c.team_id)
+      : [],
+  )
+  const winnerKey = [...winnerIds].sort().join(',')
 
   const confettiPieces = useMemo(
     () =>
@@ -117,7 +137,7 @@ export default function DisplayPage() {
         color: [...COLORS, GOLD][i % (COLORS.length + 1)],
         size: 6 + Math.random() * 8,
       })),
-    [winner?.team_id],
+    [winnerKey],
   )
 
   return (
@@ -136,7 +156,7 @@ export default function DisplayPage() {
         animation: 'bg-drift 18s ease-in-out infinite',
       }}
     >
-      {winner && (
+      {winnerIds.size > 0 && (
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
           {confettiPieces.map((p) => (
             <div
@@ -275,13 +295,19 @@ export default function DisplayPage() {
             }}
           >
             {shuffledCounts.map((c, i) => {
-              const isWinner = winner?.team_id === c.team_id
-              const fontSize = `${MIN_FONT_VH + (c.votes / maxVotes) * (MAX_FONT_VH - MIN_FONT_VH)}vh`
+              const isWinner = winnerIds.has(c.team_id)
+              const displayName = revealed ? c.name : 'Đội ẩn danh'
+
+              const idealPx = ((MIN_FONT_VH + (c.votes / maxVotes) * (MAX_FONT_VH - MIN_FONT_VH)) / 100) * viewport.height
+              // Capped by the name's actual length too, so a long real team
+              // name can't overflow the screen the way a fixed vh/vw split
+              // would once revealed — vh scaling alone doesn't know text length.
+              const maxWidthPx = viewport.width * 0.88
+              const widthCappedPx = maxWidthPx / (displayName.length * AVG_CHAR_WIDTH_RATIO)
+              const fontSize = `${Math.min(idealPx, widthCappedPx)}px`
               const color = isWinner ? GOLD : COLORS[i % COLORS.length]
               const { rotation, delay } = seededWobble(c.team_id)
               const dimmed = phase === 'closed' && !isWinner && totalVotes > 0
-
-              const displayName = revealed ? c.name : 'Đội ẩn danh'
 
               return (
                 <div
@@ -306,6 +332,7 @@ export default function DisplayPage() {
                         lineHeight: 1,
                         whiteSpace: 'nowrap',
                         transform: `rotate(${rotation}deg)`,
+                        transition: 'font-size 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.4s ease',
                         animation: `pop-in 0.5s ease-out, float ${5 + delay}s ease-in-out ${delay}s infinite`,
                         ...(pulseId === c.team_id
                           ? { animation: `pulse-glow 0.9s ease-out` }

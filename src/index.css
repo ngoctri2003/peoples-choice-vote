@@ -40,12 +40,15 @@ body {
 @keyframes pulse-glow {
   0% {
     filter: drop-shadow(0 0 0px currentColor);
+    transform: rotate(var(--rot, 0deg)) scale(1);
   }
-  40% {
-    filter: drop-shadow(0 0 26px currentColor);
+  35% {
+    filter: drop-shadow(0 0 30px currentColor);
+    transform: rotate(var(--rot, 0deg)) scale(1.22);
   }
   100% {
     filter: drop-shadow(0 0 0px currentColor);
+    transform: rotate(var(--rot, 0deg)) scale(1);
   }
 }
 
