@@ -16,7 +16,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     process.env.SUPABASE_SERVICE_ROLE_KEY as string,
   )
 
-  const { error } = await supabase.from('voting_sessions').update({ status: 'closed' }).eq('status', 'open')
+  const { error } = await supabase
+    .from('voting_sessions')
+    .update({ status: 'closed', paused: false, paused_at: null })
+    .eq('status', 'open')
 
   if (error) {
     res.status(500).json({ error: error.message })
