@@ -216,7 +216,6 @@ export default function DisplayPage() {
                 alignItems: 'center',
                 gap: 14,
                 whiteSpace: 'nowrap',
-                textShadow: TEXT_SHADOW,
               }}
             >
               <span style={{ fontSize: '1.1em' }}>🏆</span>
@@ -235,7 +234,6 @@ export default function DisplayPage() {
                 alignItems: 'center',
                 gap: 12,
                 whiteSpace: 'nowrap',
-                textShadow: TEXT_SHADOW,
               }}
             >
               <span style={{ fontSize: '1.1em' }}>🏆</span>
