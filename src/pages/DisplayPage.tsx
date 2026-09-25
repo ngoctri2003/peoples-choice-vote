@@ -172,53 +172,75 @@ export default function DisplayPage() {
       )}
 
       <div style={{ position: 'relative', padding: '36px 5vw', display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1
-            style={{
-              fontSize: 'clamp(28px, 4vw, 48px)',
-              margin: 0,
-              fontWeight: 900,
-              letterSpacing: -0.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{ fontSize: '1.1em' }}>🏆</span>
-            <span style={GRADIENT_TEXT}>People's Choice Award</span>
-          </h1>
-          <div
-            style={{
-              fontSize: 'clamp(20px, 3vw, 34px)',
-              fontWeight: 800,
-              fontVariantNumeric: 'tabular-nums',
-              padding: '10px 26px',
-              borderRadius: 999,
-              background: paused
-                ? 'rgba(148,163,184,0.18)'
-                : phase === 'open'
-                  ? 'rgba(255,255,255,0.14)'
-                  : 'rgba(255,209,102,0.15)',
-              border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(255,255,255,0.3)' : GOLD}`,
-              color: paused ? '#cbd5e1' : phase === 'closed' ? GOLD : TEXT,
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              animation:
-                phase === 'open' && !paused && msLeft <= 30000
-                  ? 'ring-pulse 1.4s ease-out infinite'
-                  : undefined,
-            }}
-          >
-            {phase === 'idle'
-              ? '--:--'
-              : phase === 'closed'
+        {phase === 'idle' ? (
+          // Bigger, centered hero title with the sponsor logo — the countdown
+          // pill is skipped here since it has nothing meaningful to show
+          // ("--:--") before the BTC starts a session.
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.6vw' }}>
+            <img src="/dss-logo.png" alt="DSS" style={{ height: 'clamp(40px, 5.5vw, 72px)', width: 'auto' }} />
+            <h1
+              style={{
+                fontSize: 'clamp(34px, 5.4vw, 68px)',
+                margin: 0,
+                fontWeight: 900,
+                letterSpacing: -0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span style={{ fontSize: '1.1em' }}>🏆</span>
+              <span style={GRADIENT_TEXT}>People's Choice Award</span>
+            </h1>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h1
+              style={{
+                fontSize: 'clamp(28px, 4vw, 48px)',
+                margin: 0,
+                fontWeight: 900,
+                letterSpacing: -0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span style={{ fontSize: '1.1em' }}>🏆</span>
+              <span style={GRADIENT_TEXT}>People's Choice Award</span>
+            </h1>
+            <div
+              style={{
+                fontSize: 'clamp(20px, 3vw, 34px)',
+                fontWeight: 800,
+                fontVariantNumeric: 'tabular-nums',
+                padding: '10px 26px',
+                borderRadius: 999,
+                background: paused
+                  ? 'rgba(148,163,184,0.18)'
+                  : phase === 'open'
+                    ? 'rgba(255,255,255,0.14)'
+                    : 'rgba(255,209,102,0.15)',
+                border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(255,255,255,0.3)' : GOLD}`,
+                color: paused ? '#cbd5e1' : phase === 'closed' ? GOLD : TEXT,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                animation:
+                  phase === 'open' && !paused && msLeft <= 30000
+                    ? 'ring-pulse 1.4s ease-out infinite'
+                    : undefined,
+              }}
+            >
+              {phase === 'closed'
                 ? '🎉 ĐÃ KẾT THÚC'
                 : paused
                   ? `⏸ TẠM DỪNG (${label})`
                   : `⏳ ${label}`}
+            </div>
           </div>
-        </div>
+        )}
 
         {phase === 'idle' && (
           <div style={{ flex: 1, minHeight: 0, display: 'flex', marginTop: '2vh' }}>
@@ -231,7 +253,7 @@ export default function DisplayPage() {
                 padding: '1vh 2vw',
               }}
             >
-              <QrCode value={voteUrl} size="min(80vh, 40vw)" />
+              <QrCode value={voteUrl} size="min(68vh, 34vw)" />
             </div>
 
             <div
