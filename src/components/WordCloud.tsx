@@ -122,6 +122,11 @@ export default function WordCloud({ items, colors, colorOverride, highlightIds, 
                 lineHeight: 1.05,
                 whiteSpace: 'nowrap',
                 color,
+                // In em units so the glow scales with each word's own font
+                // size instead of looking flat on huge words or too heavy on
+                // tiny ones — needed for contrast now that the page's
+                // background art shows through much more strongly.
+                textShadow: '0 0.03em 0.12em rgba(0,0,0,0.9), 0 0 0.25em rgba(0,0,0,0.55)',
                 transform: `rotate(${rotation}deg)`,
                 opacity: dimmed ? 0.28 : 1,
                 ...(measure

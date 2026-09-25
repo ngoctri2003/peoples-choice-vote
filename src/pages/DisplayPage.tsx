@@ -14,6 +14,10 @@ const TEXT = '#ffffff'
 const TEXT_MUTED = 'rgba(255,255,255,0.78)'
 const TEAM_COLORS = ['#ff5da2', '#5ad1ff', '#ffd166', '#7bf1a8', '#c792ff']
 const GOLD = '#ffd166'
+// A dark glow behind every foreground text/number, so it stays readable
+// against the banner artwork now that the vignette no longer blacks the
+// middle of it out — a lighter overlay alone would wash text out.
+const TEXT_SHADOW = '0 2px 10px rgba(0,0,0,0.9), 0 0 22px rgba(0,0,0,0.55)'
 
 function stringHash(s: string) {
   let hash = 0
@@ -141,12 +145,11 @@ export default function DisplayPage() {
         position: 'relative',
         color: TEXT,
         fontFamily: 'inherit',
-        // A vignette rather than a flat overlay: dark enough in the middle to
-        // fully hide the banner's own baked-in title text (which would
-        // otherwise fight with our live word-cloud text for attention), but
-        // lighter toward the edges so the robot/crowd artwork still shows.
+        // A light vignette, not a near-opaque one — the banner artwork stays
+        // visible everywhere (including the middle); foreground text relies
+        // on TEXT_SHADOW for contrast instead of blacking out the art behind it.
         background:
-          'radial-gradient(ellipse at center, rgba(5,10,26,0.99) 0%, rgba(5,10,26,0.97) 35%, rgba(5,10,26,0.7) 72%, rgba(5,10,26,0.42) 100%), url(/pca-banner.jpg)',
+          'radial-gradient(ellipse at center, rgba(5,10,26,0.6) 0%, rgba(5,10,26,0.55) 35%, rgba(5,10,26,0.45) 72%, rgba(5,10,26,0.35) 100%), url(/pca-banner.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -213,6 +216,7 @@ export default function DisplayPage() {
                 alignItems: 'center',
                 gap: 14,
                 whiteSpace: 'nowrap',
+                textShadow: TEXT_SHADOW,
               }}
             >
               <span style={{ fontSize: '1.1em' }}>🏆</span>
@@ -231,6 +235,7 @@ export default function DisplayPage() {
                 alignItems: 'center',
                 gap: 12,
                 whiteSpace: 'nowrap',
+                textShadow: TEXT_SHADOW,
               }}
             >
               <span style={{ fontSize: '1.1em' }}>🏆</span>
@@ -244,12 +249,13 @@ export default function DisplayPage() {
                 padding: '10px 26px',
                 borderRadius: 999,
                 background: paused
-                  ? 'rgba(148,163,184,0.18)'
+                  ? 'rgba(30,35,50,0.55)'
                   : phase === 'open'
-                    ? 'rgba(255,255,255,0.14)'
-                    : 'rgba(255,209,102,0.15)',
+                    ? 'rgba(20,24,40,0.5)'
+                    : 'rgba(40,32,10,0.55)',
                 border: `2px solid ${paused ? '#94a3b8' : phase === 'open' ? 'rgba(255,255,255,0.3)' : GOLD}`,
                 color: paused ? '#cbd5e1' : phase === 'closed' ? GOLD : TEXT,
+                textShadow: TEXT_SHADOW,
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
                 animation:
@@ -303,18 +309,18 @@ export default function DisplayPage() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: 'rgba(199,134,10,0.05)',
+                  background: 'rgba(20,16,8,0.45)',
                   animation: 'ring-pulse 2.2s ease-out infinite',
                 }}
               >
-                <div style={{ fontSize: 'min(18vh, 12vw)', fontWeight: 900, color: GOLD, lineHeight: 1 }}>
+                <div style={{ fontSize: 'min(18vh, 12vw)', fontWeight: 900, color: GOLD, lineHeight: 1, textShadow: TEXT_SHADOW }}>
                   {onlineCount}
                 </div>
-                <div style={{ fontSize: 'clamp(16px, 2vw, 26px)', color: TEXT_MUTED, marginTop: '1.5vh' }}>
+                <div style={{ fontSize: 'clamp(16px, 2vw, 26px)', color: TEXT_MUTED, marginTop: '1.5vh', textShadow: TEXT_SHADOW }}>
                   người đang chờ
                 </div>
               </div>
-              <div style={{ fontSize: 'clamp(18px, 2.4vw, 32px)', color: TEXT_MUTED, fontWeight: 700, textAlign: 'center' }}>
+              <div style={{ fontSize: 'clamp(18px, 2.4vw, 32px)', color: TEXT_MUTED, fontWeight: 700, textAlign: 'center', textShadow: TEXT_SHADOW }}>
                 Đang chờ BTC bắt đầu bình chọn…
               </div>
             </div>
@@ -343,11 +349,11 @@ export default function DisplayPage() {
               key={revealed ? 'revealed' : 'hidden'}
               style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.4vh' }}
             >
-              <div style={{ fontSize: 'clamp(16px, 2vw, 28px)', fontWeight: 800, color: GOLD, marginBottom: '0.4vh' }}>
+              <div style={{ fontSize: 'clamp(16px, 2vw, 28px)', fontWeight: 800, color: GOLD, marginBottom: '0.4vh', textShadow: TEXT_SHADOW }}>
                 🏆 Kết quả bình chọn
               </div>
               {totalVotes === 0 && (
-                <div style={{ color: TEXT_MUTED, fontSize: 'clamp(16px, 1.8vw, 24px)' }}>Chưa có phiếu bầu nào.</div>
+                <div style={{ color: TEXT_MUTED, fontSize: 'clamp(16px, 1.8vw, 24px)', textShadow: TEXT_SHADOW }}>Chưa có phiếu bầu nào.</div>
               )}
               {ranked.map((t, i) => {
                 const isWinner = t.rank === 1 && totalVotes > 0
@@ -365,7 +371,7 @@ export default function DisplayPage() {
                       gap: '1vw',
                       padding: '1.2vh 1.2vw',
                       borderRadius: 16,
-                      background: isWinner ? 'rgba(255,209,102,0.1)' : 'rgba(255,255,255,0.04)',
+                      background: isWinner ? 'rgba(40,32,10,0.55)' : 'rgba(10,12,22,0.5)',
                       border: `1px solid ${isWinner ? 'rgba(255,209,102,0.45)' : 'rgba(255,255,255,0.14)'}`,
                       animation: `pop-in 0.5s ease-out ${i * 0.1}s both`,
                     }}
@@ -388,6 +394,7 @@ export default function DisplayPage() {
                         fontSize: 'clamp(16px, 1.8vw, 26px)',
                         fontWeight: 900,
                         color: accent,
+                        textShadow: TEXT_SHADOW,
                       }}
                     >
                       {isWinner ? '👑' : `#${t.rank}`}
@@ -402,6 +409,7 @@ export default function DisplayPage() {
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
+                        textShadow: TEXT_SHADOW,
                       }}
                     >
                       {displayName}
@@ -413,6 +421,7 @@ export default function DisplayPage() {
                         fontWeight: 800,
                         color: accent,
                         fontVariantNumeric: 'tabular-nums',
+                        textShadow: TEXT_SHADOW,
                       }}
                     >
                       {t.votes}
@@ -424,7 +433,7 @@ export default function DisplayPage() {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', fontSize: 15, color: TEXT_MUTED }}>
+        <div style={{ textAlign: 'center', fontSize: 15, color: TEXT_MUTED, textShadow: TEXT_SHADOW }}>
           {totalVotes} lượt bình chọn đã ghi nhận
         </div>
       </div>
