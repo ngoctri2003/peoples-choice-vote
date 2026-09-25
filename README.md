@@ -10,6 +10,9 @@ Mobile voting + live results screen for the AI Solution Challenge 2026 finals.
 
 1. **Supabase**: create a project, then run [`supabase/schema.sql`](supabase/schema.sql) in the SQL editor.
    Seed the 5 finalist teams (uncomment/edit the `insert into teams` block at the bottom).
+   Seed the `allowed_emails` table with the list of emails allowed to vote (not committed to git, since
+   it's real PII — run something like `insert into allowed_emails (email) values ('a@x.com'), ('b@x.com') on conflict do nothing;`
+   directly in the SQL editor, e.g. from a CSV export of the registration sheet).
 2. **Env vars** (see [`.env.example`](.env.example)):
    - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — from Supabase project settings.
    - `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key, used only by `/api/*` (server-side, never shipped to the browser).

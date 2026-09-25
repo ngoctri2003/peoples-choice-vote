@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useActiveSession, sessionPhase } from '../lib/useActiveSession'
 import { useCountdown } from '../lib/useCountdown'
 import { useTeams } from '../lib/useTeams'
 import { useReportPresence } from '../lib/presence'
-import { getVoterToken, getVotedTeamIds, saveVotedTeamIds } from '../lib/voterToken'
+import { getVoterAuth, saveVoterAuth, type VoterAuth } from '../lib/voterToken'
 import Blobs, { GRADIENT_TEXT } from '../components/Blobs'
 import { TEXT, TEXT_MUTED, CARD_BG, CARD_BORDER, CARD_SHADOW, TEAM_COLORS, GOLD, DANGER, SUBTLE_BG, SUBTLE_BORDER } from '../lib/theme'
 
@@ -21,16 +21,42 @@ export default function VotePage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [votedTeamIds, setVotedTeamIds] = useState<string[]>([])
+  const [votesLoaded, setVotesLoaded] = useState(false)
+
+  const [voterAuth, setVoterAuth] = useState<VoterAuth | null>(() => getVoterAuth())
+  const [emailInput, setEmailInput] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [gateError, setGateError] = useState<string | null>(null)
 
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
 
+  // voter_token is now issued per verified email (see /api/verify-voter), so
+  // whether this voter already voted has to come from the server — the same
+  // email opened on a different device must still show "already voted".
   useEffect(() => {
-    if (session) setVotedTeamIds(getVotedTeamIds(session.id))
-  }, [session])
+    if (!session || !voterAuth) {
+      setVotesLoaded(false)
+      return
+    }
+    let cancelled = false
+    setVotesLoaded(false)
+    supabase
+      .from('votes')
+      .select('team_id')
+      .eq('session_id', session.id)
+      .eq('voter_token', voterAuth.voterToken)
+      .then(({ data }) => {
+        if (cancelled) return
+        setVotedTeamIds((data ?? []).map((v) => v.team_id))
+        setVotesLoaded(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [session, voterAuth])
 
   const alreadyVoted = votedTeamIds.length > 0
-  const voterToken = useMemo(() => getVoterToken(), [])
 
   function toggleTeam(id: string) {
     setSelected((prev) => {
@@ -40,14 +66,40 @@ export default function VotePage() {
     })
   }
 
+  async function verifyEmail() {
+    const email = emailInput.trim()
+    if (!email || verifying) return
+    setVerifying(true)
+    setGateError(null)
+    try {
+      const res = await fetch('/api/verify-voter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const body = await res.json()
+      if (!res.ok) {
+        setGateError(body.error ?? 'Xác thực thất bại, vui lòng thử lại.')
+        return
+      }
+      const auth: VoterAuth = { email: body.email, voterToken: body.voterToken }
+      saveVoterAuth(auth)
+      setVoterAuth(auth)
+    } catch {
+      setGateError('Lỗi kết nối, vui lòng thử lại.')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   async function submit() {
-    if (!session || selected.length === 0) return
+    if (!session || !voterAuth || selected.length === 0) return
     setSubmitting(true)
     setError(null)
     const rows = selected.map((teamId) => ({
       session_id: session.id,
       team_id: teamId,
-      voter_token: voterToken,
+      voter_token: voterAuth.voterToken,
     }))
     const { error: insertError } = await supabase.from('votes').insert(rows)
     setSubmitting(false)
@@ -55,7 +107,6 @@ export default function VotePage() {
       setError('Vote không thành công (có thể vote đã đóng). Vui lòng thử lại.')
       return
     }
-    saveVotedTeamIds(session.id, selected)
     setVotedTeamIds(selected)
   }
 
@@ -64,6 +115,69 @@ export default function VotePage() {
       <Shell>
         <Card>
           <Centered>Đang tải…</Centered>
+        </Card>
+      </Shell>
+    )
+  }
+
+  if (!voterAuth) {
+    return (
+      <Shell>
+        <Card>
+          <Centered>
+            <div style={{ fontSize: 64 }}>📧</div>
+            <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Nhập email để bình chọn</h2>
+            <p style={{ color: TEXT_MUTED, margin: '0 0 20px', fontSize: 15, maxWidth: 340 }}>
+              Chỉ những email trong danh sách được mời mới có thể tham gia bình chọn.
+            </p>
+            <input
+              type="email"
+              inputMode="email"
+              autoFocus
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') verifyEmail()
+              }}
+              placeholder="ban@dssolution.jp"
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                borderRadius: 14,
+                border: `2px solid ${gateError ? DANGER : SUBTLE_BORDER}`,
+                background: SUBTLE_BG,
+                color: TEXT,
+                fontSize: 16,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            {gateError && (
+              <p style={{ color: DANGER, textAlign: 'center', marginTop: 10, fontSize: 14 }}>{gateError}</p>
+            )}
+            <button
+              onClick={verifyEmail}
+              disabled={!emailInput.trim() || verifying}
+              style={{
+                marginTop: 16,
+                width: '100%',
+                padding: '15px 0',
+                borderRadius: 16,
+                border: 'none',
+                background:
+                  !emailInput.trim() || verifying
+                    ? SUBTLE_BG
+                    : `linear-gradient(135deg, ${TEAM_COLORS[0]}, ${TEAM_COLORS[4]})`,
+                color: !emailInput.trim() || verifying ? TEXT_MUTED : '#fff',
+                fontSize: 17,
+                fontWeight: 800,
+                cursor: !emailInput.trim() || verifying ? 'not-allowed' : 'pointer',
+                transition: 'transform 0.15s ease, box-shadow 0.2s ease',
+              }}
+            >
+              {verifying ? 'Đang kiểm tra…' : 'Tiếp tục'}
+            </button>
+          </Centered>
         </Card>
       </Shell>
     )
@@ -106,6 +220,16 @@ export default function VotePage() {
             <h2 style={{ margin: '18px 0 6px', fontSize: 22 }}>Đang tạm dừng bình chọn</h2>
             <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>BTC sẽ tiếp tục trong giây lát, vui lòng chờ…</p>
           </Centered>
+        </Card>
+      </Shell>
+    )
+  }
+
+  if (!votesLoaded) {
+    return (
+      <Shell>
+        <Card>
+          <Centered>Đang tải…</Centered>
         </Card>
       </Shell>
     )

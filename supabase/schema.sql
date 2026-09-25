@@ -38,6 +38,22 @@ create table if not exists votes (
 create index if not exists votes_session_team_idx on votes(session_id, team_id);
 create index if not exists votes_session_voter_idx on votes(session_id, voter_token);
 
+-- Email allow-list: only these emails may verify and receive a voter_token.
+-- Populated by the BTC (see README) — not seeded here since it's real PII.
+create table if not exists allowed_emails (
+  email text primary key,
+  created_at timestamptz not null default now()
+);
+
+-- One row per verified voter, created by /api/verify-voter after checking
+-- allowed_emails. voter_token is what the client actually uses to vote, so a
+-- given email always maps to the same token (no re-voting via a new device).
+create table if not exists voters (
+  email text primary key references allowed_emails(email) on delete cascade,
+  voter_token uuid not null unique default gen_random_uuid(),
+  created_at timestamptz not null default now()
+);
+
 -- ---------- Helpers ----------
 
 -- Current number of distinct teams a voter has already voted for in a session.
@@ -83,11 +99,31 @@ $$;
 
 grant execute on function get_vote_counts(uuid) to anon, authenticated;
 
+-- Lets the anon-role INSERT policy on votes check whether a voter_token was
+-- actually issued by /api/verify-voter, without granting anon direct SELECT
+-- access to the voters table (security definer runs as the function owner).
+create or replace function is_voter_allowed(p_voter_token uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (select 1 from voters where voter_token = p_voter_token);
+$$;
+
+grant execute on function is_voter_allowed(uuid) to anon, authenticated;
+
 -- ---------- Row Level Security ----------
 
 alter table teams enable row level security;
 alter table voting_sessions enable row level security;
 alter table votes enable row level security;
+alter table allowed_emails enable row level security;
+alter table voters enable row level security;
+-- No policies for anon/authenticated on allowed_emails or voters: RLS with
+-- zero policies denies all access by default, so only the service-role
+-- /api/verify-voter endpoint can read/write them.
 
 -- Anyone (anon) can read teams and sessions.
 create policy "teams are publicly readable" on teams
@@ -116,6 +152,7 @@ create policy "anon can insert votes while session is open" on votes
         and now() < s.ends_at
     )
     and voter_pick_count(session_id, voter_token) < 3
+    and is_voter_allowed(voter_token)
   );
 
 -- ---------- Realtime ----------
