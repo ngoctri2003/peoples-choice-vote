@@ -32,11 +32,15 @@ create table if not exists votes (
   team_id uuid not null references teams(id) on delete cascade,
   voter_token uuid not null,
   created_at timestamptz not null default now(),
-  unique (session_id, voter_token, team_id)
+  -- One vote per voter per session (their single favorite team) — enforced
+  -- here at the DB level too, not just by the RLS check below, so two
+  -- near-simultaneous inserts from the same voter can't both slip through.
+  unique (session_id, voter_token)
 );
 
 create index if not exists votes_session_team_idx on votes(session_id, team_id);
-create index if not exists votes_session_voter_idx on votes(session_id, voter_token);
+-- No separate (session_id, voter_token) index: the unique constraint above
+-- already creates one on those exact columns.
 
 -- Email allow-list: only these emails may verify and receive a voter_token.
 -- Populated by the BTC (see README) — not seeded here since it's real PII.
@@ -151,7 +155,7 @@ create policy "anon can insert votes while session is open" on votes
         and not s.paused
         and now() < s.ends_at
     )
-    and voter_pick_count(session_id, voter_token) < 3
+    and voter_pick_count(session_id, voter_token) < 1
     and is_voter_allowed(voter_token)
   );
 

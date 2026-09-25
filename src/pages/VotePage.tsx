@@ -8,7 +8,6 @@ import { getVoterAuth, saveVoterAuth, type VoterAuth } from '../lib/voterToken'
 import Blobs, { GRADIENT_TEXT } from '../components/Blobs'
 import { TEXT, TEXT_MUTED, CARD_BG, CARD_BORDER, CARD_SHADOW, TEAM_COLORS, GOLD, DANGER, SUBTLE_BG, SUBTLE_BORDER } from '../lib/theme'
 
-const MAX_PICKS = 3
 const TEAM_EMOJI = ['🚀', '🎯', '🔥', '🌟', '💡', '🎮', '🧠', '⚡']
 
 export default function VotePage() {
@@ -17,7 +16,7 @@ export default function VotePage() {
   const paused = session?.paused ?? false
   const teams = useTeams()
   useReportPresence()
-  const [selected, setSelected] = useState<string[]>([])
+  const [selected, setSelected] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [votedTeamIds, setVotedTeamIds] = useState<string[]>([])
@@ -59,11 +58,7 @@ export default function VotePage() {
   const alreadyVoted = votedTeamIds.length > 0
 
   function toggleTeam(id: string) {
-    setSelected((prev) => {
-      if (prev.includes(id)) return prev.filter((t) => t !== id)
-      if (prev.length >= MAX_PICKS) return prev
-      return [...prev, id]
-    })
+    setSelected((prev) => (prev === id ? null : id))
   }
 
   async function verifyEmail() {
@@ -93,21 +88,20 @@ export default function VotePage() {
   }
 
   async function submit() {
-    if (!session || !voterAuth || selected.length === 0) return
+    if (!session || !voterAuth || !selected) return
     setSubmitting(true)
     setError(null)
-    const rows = selected.map((teamId) => ({
+    const { error: insertError } = await supabase.from('votes').insert({
       session_id: session.id,
-      team_id: teamId,
+      team_id: selected,
       voter_token: voterAuth.voterToken,
-    }))
-    const { error: insertError } = await supabase.from('votes').insert(rows)
+    })
     setSubmitting(false)
     if (insertError) {
       setError('Vote không thành công (có thể vote đã đóng). Vui lòng thử lại.')
       return
     }
-    setVotedTeamIds(selected)
+    setVotedTeamIds([selected])
   }
 
   if (sessionLoading) {
@@ -285,13 +279,13 @@ export default function VotePage() {
             🏆 People's Choice Award
           </h1>
           <p style={{ color: TEXT_MUTED, margin: 0, fontSize: 15 }}>
-            Chọn tối đa <strong style={{ color: TEXT }}>3 đội</strong> yêu thích nhất
+            Chọn <strong style={{ color: TEXT }}>1 đội</strong> yêu thích nhất
           </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {teams.map((team, i) => {
-            const isSelected = selected.includes(team.id)
+            const isSelected = selected === team.id
             const accent = TEAM_COLORS[i % TEAM_COLORS.length]
             return (
               <button
@@ -356,47 +350,31 @@ export default function VotePage() {
           })}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, margin: '22px 0 4px' }}>
-          {Array.from({ length: MAX_PICKS }, (_, i) => (
-            <span
-              key={i}
-              style={{
-                width: i < selected.length ? 22 : 9,
-                height: 9,
-                borderRadius: 999,
-                background: i < selected.length ? GOLD : SUBTLE_BORDER,
-                transition: 'all 0.25s ease',
-              }}
-            />
-          ))}
-        </div>
-
         {error && (
           <p style={{ color: DANGER, textAlign: 'center', marginTop: 10, fontSize: 14 }}>{error}</p>
         )}
 
         <button
           onClick={submit}
-          disabled={selected.length === 0 || submitting}
+          disabled={!selected || submitting}
           style={{
             marginTop: 18,
             width: '100%',
             padding: '17px 0',
             borderRadius: 16,
             border: 'none',
-            background:
-              selected.length === 0
-                ? SUBTLE_BG
-                : `linear-gradient(135deg, ${TEAM_COLORS[0]}, ${TEAM_COLORS[4]})`,
-            color: selected.length === 0 ? TEXT_MUTED : '#fff',
+            background: !selected
+              ? SUBTLE_BG
+              : `linear-gradient(135deg, ${TEAM_COLORS[0]}, ${TEAM_COLORS[4]})`,
+            color: !selected ? TEXT_MUTED : '#fff',
             fontSize: 18,
             fontWeight: 800,
-            cursor: selected.length === 0 ? 'not-allowed' : 'pointer',
-            boxShadow: selected.length === 0 ? 'none' : `0 10px 28px ${TEAM_COLORS[4]}40`,
+            cursor: !selected ? 'not-allowed' : 'pointer',
+            boxShadow: !selected ? 'none' : `0 10px 28px ${TEAM_COLORS[4]}40`,
             transition: 'transform 0.15s ease, box-shadow 0.2s ease',
           }}
         >
-          {submitting ? 'Đang gửi…' : `Gửi bình chọn (${selected.length}/${MAX_PICKS})`}
+          {submitting ? 'Đang gửi…' : 'Gửi bình chọn'}
         </button>
       </Card>
     </Shell>
