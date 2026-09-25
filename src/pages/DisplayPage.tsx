@@ -175,9 +175,34 @@ export default function DisplayPage() {
         {phase === 'idle' ? (
           // Bigger, centered hero title with the sponsor logo — the countdown
           // pill is skipped here since it has nothing meaningful to show
-          // ("--:--") before the BTC starts a session.
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.6vw' }}>
-            <img src="/dss-logo.png" alt="DSS" style={{ height: 'clamp(40px, 5.5vw, 72px)', width: 'auto' }} />
+          // ("--:--") before the BTC starts a session. The logo is
+          // absolutely positioned at the far left so it can't compete with
+          // the title for space — a shared-row layout (e.g. a grid column)
+          // would either crowd the two together or shrink to fit, neither of
+          // which is "pushed apart" the way this needs to look.
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              justifyContent: 'center',
+              // Reserves room for the logo so the centered title is shifted
+              // just enough to clear it, instead of overlapping when the
+              // title itself is wide.
+              paddingLeft: 'clamp(150px, 17vw, 260px)',
+            }}
+          >
+            <img
+              src="/dss-logo.png"
+              alt="DSS"
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                height: 'clamp(40px, 5.5vw, 72px)',
+                width: 'auto',
+              }}
+            />
             <h1
               style={{
                 fontSize: 'clamp(34px, 5.4vw, 68px)',
