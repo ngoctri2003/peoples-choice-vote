@@ -102,7 +102,10 @@ export default function DisplayPage() {
     }
   }, [loadCounts])
 
-  const revealed = session?.revealed ?? false
+  // Names stay hidden while voting is open (so the audience can't match a
+  // big-screen bar to a team), but always show once results are in — there's
+  // no separate "reveal" step for the MC to trigger anymore.
+  const revealed = phase === 'closed'
   const shuffledCounts = session ? shuffleForSession(counts, session.id) : counts
 
   const totalVotes = counts.reduce((sum, c) => sum + c.votes, 0)
@@ -335,7 +338,6 @@ export default function DisplayPage() {
           <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: '3vw', marginTop: '2vh' }}>
             <div style={{ flex: 1.2, minWidth: 0 }}>
               <WordCloud
-                key={revealed ? 'revealed' : 'hidden'}
                 items={cloudItems}
                 colors={TEAM_COLORS}
                 colorOverride={goldOverride}
@@ -344,7 +346,6 @@ export default function DisplayPage() {
               />
             </div>
             <div
-              key={revealed ? 'revealed' : 'hidden'}
               style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.4vh' }}
             >
               <div style={{ fontSize: 'clamp(16px, 2vw, 28px)', fontWeight: 800, color: GOLD, marginBottom: '0.4vh', textShadow: TEXT_SHADOW }}>
@@ -355,7 +356,6 @@ export default function DisplayPage() {
               )}
               {ranked.map((t, i) => {
                 const isWinner = t.rank === 1 && totalVotes > 0
-                const displayName = revealed ? t.name : 'Đội ẩn danh'
                 const pct = (t.votes / maxVotes) * 100
                 const accent = isWinner ? GOLD : TEAM_COLORS[i % TEAM_COLORS.length]
                 return (
@@ -410,7 +410,7 @@ export default function DisplayPage() {
                         textShadow: TEXT_SHADOW,
                       }}
                     >
-                      {displayName}
+                      {t.name}
                     </div>
                     <div
                       style={{

@@ -20,7 +20,6 @@ export default function McPage() {
 
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
-  const revealed = session?.revealed ?? false
   const paused = session?.paused ?? false
 
   useEffect(() => {
@@ -107,7 +106,7 @@ export default function McPage() {
           <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
             {phase === 'idle' && 'Chưa bắt đầu'}
             {phase === 'open' && (paused ? `Đang tạm dừng — còn ${label}` : `Đang mở — còn ${label}`)}
-            {phase === 'closed' && (revealed ? 'Đã đóng — đã hiển thị kết quả' : 'Đã đóng — chưa hiển thị tên đội')}
+            {phase === 'closed' && 'Đã đóng — đã hiển thị kết quả'}
           </span>
         </div>
 
@@ -150,18 +149,6 @@ export default function McPage() {
         </button>
 
         <button
-          disabled={busy || phase !== 'closed' || revealed}
-          onClick={() => call('/api/reveal-results')}
-          style={{
-            ...btnStyle('linear-gradient(135deg, #c7860a, #e0367a)', busy || phase !== 'closed' || revealed),
-            width: '100%',
-            marginBottom: 12,
-          }}
-        >
-          🏆 {revealed ? 'Đã hiển thị tên đội' : 'Hiển thị kết quả (lộ tên đội)'}
-        </button>
-
-        <button
           disabled={busy || phase === 'idle'}
           onClick={() => call('/api/reset')}
           style={{
@@ -177,7 +164,7 @@ export default function McPage() {
 
         <div style={{ borderTop: `1px solid ${CARD_BORDER}`, paddingTop: 18 }}>
           <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: 14, color: TEXT }}>
-            Tên 5 đội (ẩn khỏi màn hình chính đến khi hiển thị kết quả)
+            Tên 5 đội (ẩn khi đang bình chọn, tự hiện khi có kết quả)
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {teams.map((t, i) => (

@@ -17,9 +17,6 @@ create table if not exists voting_sessions (
   started_at timestamptz not null default now(),
   ends_at timestamptz not null,
   status text not null default 'open' check (status in ('open', 'closed')),
-  -- Team names stay hidden on /display (shown as "Đội N") until the MC
-  -- explicitly reveals them, for a game-show-style results moment.
-  revealed boolean not null default false,
   -- While paused, votes are rejected and the countdown is frozen; resuming
   -- shifts ends_at forward by the paused duration so remaining time is kept.
   paused boolean not null default false,
