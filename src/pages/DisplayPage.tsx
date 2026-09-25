@@ -5,6 +5,7 @@ import { useCountdown } from '../lib/useCountdown'
 import { useOnlineCount } from '../lib/presence'
 import { GRADIENT_TEXT } from '../components/Blobs'
 import QrCode from '../components/QrCode'
+import WordCloud from '../components/WordCloud'
 
 // This screen sits on top of the event's own "People's Choice Award" banner
 // artwork (dark navy), so it uses its own light-on-dark palette instead of
@@ -13,22 +14,6 @@ const TEXT = '#ffffff'
 const TEXT_MUTED = 'rgba(255,255,255,0.78)'
 const TEAM_COLORS = ['#ff5da2', '#5ad1ff', '#ffd166', '#7bf1a8', '#c792ff']
 const GOLD = '#ffd166'
-
-// Sizes are viewport-height-relative (not px) so the cloud always fits the
-// screen without scrolling, no matter how lopsided the vote counts get —
-// a projector screen has no scrollbar.
-const MIN_FONT_VH = 5.5
-const MAX_FONT_VH = 17
-
-// A small deterministic wobble per team so the cloud feels organic
-// instead of a perfect grid, without jittering on every re-render.
-function seededWobble(id: string) {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0
-  const rotation = ((hash % 900) / 100 - 4.5) * 2 // -9deg .. 9deg
-  const delay = (hash % 400) / 100 // 0s .. 4s
-  return { rotation, delay }
-}
 
 function stringHash(s: string) {
   let hash = 0
@@ -46,19 +31,15 @@ function shuffleForSession<T extends { team_id: string }>(items: T[], sessionId:
   )
 }
 
-// Approximate average glyph width as a fraction of font-size for this bold
-// rounded font — used to cap font-size by actual text length so a long real
-// team name can't overflow the screen the way a fixed vw fraction would.
-const AVG_CHAR_WIDTH_RATIO = 0.62
+type Ranked = VoteCount & { rank: number }
 
-function useViewportSize() {
-  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight })
-  useEffect(() => {
-    const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight })
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-  return size
+// Competition ranking (1, 2, 2, 4…) so a tie shares a rank instead of one
+// team being arbitrarily placed above the other. Sorting the already
+// session-shuffled array (not sort_order) keeps ties from leaking /vote's
+// fixed team order while names are still hidden.
+function rankCounts(counts: VoteCount[]): Ranked[] {
+  const sorted = [...counts].sort((a, b) => b.votes - a.votes)
+  return sorted.map((c) => ({ ...c, rank: sorted.findIndex((x) => x.votes === c.votes) + 1 }))
 }
 
 export default function DisplayPage() {
@@ -68,7 +49,6 @@ export default function DisplayPage() {
   const [pulseId, setPulseId] = useState<string | null>(null)
   const onlineCount = useOnlineCount()
   const voteUrl = `${window.location.origin}/vote`
-  const viewport = useViewportSize()
 
   const basePhase = sessionPhase(session)
   const phase = basePhase === 'open' && isOver ? 'closed' : basePhase
@@ -123,12 +103,6 @@ export default function DisplayPage() {
 
   const totalVotes = counts.reduce((sum, c) => sum + c.votes, 0)
   const maxVotes = Math.max(1, ...counts.map((c) => c.votes))
-  const minVotes = counts.length > 0 ? Math.min(...counts.map((c) => c.votes)) : 0
-  // Sized by where each team sits between the current lowest and highest
-  // count, not vote-count-vs-max alone — vs-max alone compresses toward the
-  // top once every team has racked up a lot of votes (e.g. 32 vs 51 is a
-  // big lead, but 32/51 and 51/51 look nearly identical as raw ratios).
-  const voteSpread = Math.max(1, maxVotes - minVotes)
   // All teams tied for first place are winners, not just the first one found —
   // a 3-way tie should crown all 3, not arbitrarily pick one.
   const winnerIds = new Set(
@@ -137,6 +111,14 @@ export default function DisplayPage() {
       : [],
   )
   const winnerKey = [...winnerIds].sort().join(',')
+  const goldOverride = Object.fromEntries([...winnerIds].map((id) => [id, GOLD]))
+
+  const cloudItems = shuffledCounts.map((c) => ({
+    id: c.team_id,
+    name: revealed ? c.name : 'Đội ẩn danh',
+    votes: c.votes,
+  }))
+  const ranked = phase === 'closed' ? rankCounts(shuffledCounts) : []
 
   const confettiPieces = useMemo(
     () =>
@@ -292,85 +274,106 @@ export default function DisplayPage() {
           </div>
         )}
 
-        {phase !== 'idle' && (
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflow: 'hidden',
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              justifyContent: 'center',
-              alignContent: 'center',
-              gap: '1.5vh 3vw',
-              padding: '2vh 2vw',
-            }}
-          >
-            {shuffledCounts.map((c, i) => {
-              const isWinner = winnerIds.has(c.team_id)
-              const displayName = revealed ? c.name : 'Đội ẩn danh'
+        {phase === 'open' && (
+          <div style={{ flex: 1, minHeight: 0, marginTop: '2vh' }}>
+            <WordCloud items={cloudItems} colors={TEAM_COLORS} pulseIds={pulseId ? new Set([pulseId]) : undefined} />
+          </div>
+        )}
 
-              const sizeRatio = (c.votes - minVotes) / voteSpread
-              const idealPx = ((MIN_FONT_VH + sizeRatio * (MAX_FONT_VH - MIN_FONT_VH)) / 100) * viewport.height
-              // Capped by the name's actual length too, so a long real team
-              // name can't overflow the screen the way a fixed vh/vw split
-              // would once revealed — vh scaling alone doesn't know text length.
-              const maxWidthPx = viewport.width * 0.88
-              const widthCappedPx = maxWidthPx / (displayName.length * AVG_CHAR_WIDTH_RATIO)
-              const fontSize = `${Math.min(idealPx, widthCappedPx)}px`
-              const color = isWinner ? GOLD : TEAM_COLORS[i % TEAM_COLORS.length]
-              const { rotation, delay } = seededWobble(c.team_id)
-              const dimmed = phase === 'closed' && !isWinner && totalVotes > 0
-
-              return (
-                <div
-                  key={c.team_id}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 6,
-                    opacity: dimmed ? 0.4 : 1,
-                    transition: 'opacity 0.6s ease',
-                  }}
-                >
+        {phase === 'closed' && (
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: '3vw', marginTop: '2vh' }}>
+            <div style={{ flex: 1.2, minWidth: 0 }}>
+              <WordCloud
+                key={revealed ? 'revealed' : 'hidden'}
+                items={cloudItems}
+                colors={TEAM_COLORS}
+                colorOverride={goldOverride}
+                highlightIds={winnerIds}
+                dimOthers
+              />
+            </div>
+            <div
+              key={revealed ? 'revealed' : 'hidden'}
+              style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.4vh' }}
+            >
+              <div style={{ fontSize: 'clamp(16px, 2vw, 28px)', fontWeight: 800, color: GOLD, marginBottom: '0.4vh' }}>
+                🏆 Kết quả bình chọn
+              </div>
+              {totalVotes === 0 && (
+                <div style={{ color: TEXT_MUTED, fontSize: 'clamp(16px, 1.8vw, 24px)' }}>Chưa có phiếu bầu nào.</div>
+              )}
+              {ranked.map((t, i) => {
+                const isWinner = t.rank === 1 && totalVotes > 0
+                const displayName = revealed ? t.name : 'Đội ẩn danh'
+                const pct = (t.votes / maxVotes) * 100
+                const accent = isWinner ? GOLD : TEAM_COLORS[i % TEAM_COLORS.length]
+                return (
                   <div
-                    key={revealed ? 'revealed' : 'hidden'}
-                    style={
-                      {
-                        '--rot': `${rotation}deg`,
-                        fontSize,
-                        fontWeight: 800,
-                        color,
-                        lineHeight: 1,
-                        whiteSpace: 'nowrap',
-                        transform: `rotate(${rotation}deg)`,
-                        transition: 'font-size 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.4s ease',
-                        // float only ever touches `transform`, and pulse-glow /
-                        // crown-glow only ever touch `filter` — layered together
-                        // like this, a new vote's glow can't interrupt or snap
-                        // the gentle wobble the way overriding `animation` did.
-                        animation: [
-                          'pop-in 0.5s ease-out',
-                          `float ${5 + delay}s ease-in-out ${delay}s infinite`,
-                          pulseId === c.team_id ? 'pulse-glow 0.9s ease-out' : null,
-                          isWinner ? 'crown-glow 1.6s ease-in-out infinite' : null,
-                        ]
-                          .filter(Boolean)
-                          .join(', '),
-                      } as unknown as React.CSSProperties
-                    }
+                    key={t.team_id}
+                    style={{
+                      position: 'relative',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1vw',
+                      padding: '1.2vh 1.2vw',
+                      borderRadius: 16,
+                      background: isWinner ? 'rgba(255,209,102,0.1)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${isWinner ? 'rgba(255,209,102,0.45)' : 'rgba(255,255,255,0.14)'}`,
+                      animation: `pop-in 0.5s ease-out ${i * 0.1}s both`,
+                    }}
                   >
-                    {isWinner ? '👑 ' : ''}
-                    {displayName}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: `${pct}%`,
+                        background: isWinner
+                          ? 'linear-gradient(90deg, rgba(255,209,102,0.2), rgba(255,209,102,0.03))'
+                          : `linear-gradient(90deg, ${accent}26, transparent)`,
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'relative',
+                        width: '2em',
+                        textAlign: 'center',
+                        fontSize: 'clamp(16px, 1.8vw, 26px)',
+                        fontWeight: 900,
+                        color: accent,
+                      }}
+                    >
+                      {isWinner ? '👑' : `#${t.rank}`}
+                    </div>
+                    <div
+                      style={{
+                        position: 'relative',
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: 'clamp(14px, 1.6vw, 24px)',
+                        fontWeight: 800,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {displayName}
+                    </div>
+                    <div
+                      style={{
+                        position: 'relative',
+                        fontSize: 'clamp(14px, 1.5vw, 22px)',
+                        fontWeight: 800,
+                        color: accent,
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {t.votes}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 16, color: TEXT_MUTED, fontVariantNumeric: 'tabular-nums' }}>
-                    {c.votes} vote{c.votes === 1 ? '' : 's'}
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         )}
 
